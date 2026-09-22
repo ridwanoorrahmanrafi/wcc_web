@@ -61,6 +61,7 @@ function SidebarInner({ user, collapsed, setCollapsed, onClose, isMobile }) {
           title: 'CORE OVERSIGHT',
           items: [
             { id: 'overview', label: 'Dashboard Overview', icon: LayoutDashboard, href: '/dashboard' },
+            { id: 'member-requests', label: 'Member Requests', icon: HeartHandshake, href: '/dashboard?tab=requests' },
             { id: 'members', label: 'Member Directory', icon: Users, href: '/members' },
             { id: 'add-member', label: 'Register Member', icon: UserPlus, href: '/members/new' },
             { id: 'approvals', label: 'Pending Approvals', icon: Clock, href: '/members?status=Pending' }
@@ -91,6 +92,7 @@ function SidebarInner({ user, collapsed, setCollapsed, onClose, isMobile }) {
           title: 'VOLUNTEER CORPS',
           items: [
             { id: 'hub', label: 'Volunteer Hub', icon: LayoutDashboard, href: '/dashboard?tab=hub' },
+            { id: 'requests', label: 'Wing Requests', icon: HeartHandshake, href: '/dashboard?tab=requests' },
             { id: 'badge', label: 'My Digital Badge', icon: Award, href: '/dashboard?tab=badge' },
             { id: 'log', label: 'Log Service Hours', icon: Clock, href: '/dashboard?tab=log' },
             { id: 'history', label: 'Service Log History', icon: FileText, href: '/dashboard?tab=history' }
@@ -112,6 +114,7 @@ function SidebarInner({ user, collapsed, setCollapsed, onClose, isMobile }) {
         title: 'MY MEMBERSHIP',
         items: [
           { id: 'hub', label: 'Member Portal', icon: LayoutDashboard, href: '/dashboard?tab=hub' },
+          { id: 'requests', label: 'Wing & Volunteer Hub', icon: HeartHandshake, href: '/dashboard?tab=requests' },
           { id: 'id-card', label: 'Official Digital ID', icon: Award, href: '/dashboard?tab=id-card' },
           { id: 'profile', label: 'Membership Profile', icon: User, href: '/dashboard?tab=profile' }
         ]

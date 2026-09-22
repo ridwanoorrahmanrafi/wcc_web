@@ -111,25 +111,19 @@ export default function Footer() {
             <h4 className="text-xs font-bold uppercase tracking-wider text-[#F1AD1A]">Join & Access</h4>
             <ul className="space-y-2.5 text-sm">
               <li>
-                <Link href="/register?role=member" className="hover:text-white transition-colors flex items-center gap-1 text-slate-200">
-                  <span>Become a Member</span>
+                <Link href="/login" className="hover:text-white transition-colors flex items-center gap-1 text-[#F1AD1A] font-semibold">
+                  <span>Join WCC / Sign In</span>
                   <ArrowUpRight className="w-3 h-3 text-slate-400" />
                 </Link>
               </li>
               <li>
-                <Link href="/register?role=volunteer" className="hover:text-white transition-colors flex items-center gap-1 text-[#F1AD1A]">
-                  <span>Join as Volunteer</span>
-                  <Sparkles className="w-3 h-3" />
-                </Link>
-              </li>
-              <li>
-                <Link href="/login" className="hover:text-white transition-colors">
-                  Executive Portal Login
+                <Link href="/register" className="hover:text-white transition-colors flex items-center gap-1 text-slate-200">
+                  <span>Register Membership</span>
                 </Link>
               </li>
               <li>
                 <Link href="/dashboard" className="hover:text-white transition-colors">
-                  My Role Dashboard
+                  Member Portal Dashboard
                 </Link>
               </li>
             </ul>

@@ -1,50 +1,36 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Users,
-  Sparkles,
   ShieldCheck,
   UserPlus,
   Mail,
   Lock,
   Phone,
   MapPin,
-  CheckCircle2,
   AlertCircle,
-  ArrowLeft
+  ArrowLeft,
+  Sparkles
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { auth, googleProvider } from '@/lib/firebase';
+import { signInWithPopup } from 'firebase/auth';
 
 function RegisterForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  const [role, setRole] = useState('member');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
-  const [wing, setWing] = useState('শিক্ষা উইং');
+  const [wing, setWing] = useState('সাধারণ উইং');
   const [upazila, setUpazila] = useState('ঝালকাঠি সদর');
-  const [interests, setInterests] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    const roleParam = searchParams.get('role');
-    if (roleParam === 'volunteer' || roleParam === 'member') {
-      setRole(roleParam);
-    }
-  }, [searchParams]);
-
-  const toggleInterest = (item) => {
-    setInterests((prev) =>
-      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
-    );
-  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -56,16 +42,16 @@ function RegisterForm() {
         name,
         email,
         password,
-        role,
+        role: 'member',
         phone,
         volunteerWing: wing,
-        volunteerInterests: interests
+        volunteerInterests: []
       });
 
       if (res.token) {
         localStorage.setItem('wcc_token', res.token);
         localStorage.setItem('wcc_user', JSON.stringify(res.user));
-        alert(`Congratulations! You have successfully registered as ${role === 'volunteer' ? 'a Volunteer' : 'a Member'} with WCC!`);
+        alert('Congratulations! You have successfully registered as a Member with WCC! Your digital ID has been generated.');
         router.push('/dashboard');
       }
     } catch (err) {
@@ -75,24 +61,41 @@ function RegisterForm() {
     }
   };
 
-  const wings = [
-    'শিক্ষা উইং',
-    'স্বাস্থ্য উইg (Health)',
-    'আইসিটি উইং (ICT & IT)',
-    'পরিবেশ উইং (Environment)',
-    'সমাজকল্যাণ উইং',
-    'সংস্কৃতি ও ক্রীড়া উইং'
-  ];
+  const handleGoogleAuth = async () => {
+    setError('');
+    setGoogleLoading(true);
+    try {
+      if (!auth || !googleProvider) {
+        throw new Error('Firebase authentication is not ready.');
+      }
+      const result = await signInWithPopup(auth, googleProvider);
+      const fbUser = result.user;
+
+      const res = await api.googleLogin({
+        email: fbUser.email,
+        name: fbUser.displayName || fbUser.email.split('@')[0],
+        photoUrl: fbUser.photoURL || '',
+        uid: fbUser.uid
+      });
+
+      if (res.token) {
+        localStorage.setItem('wcc_token', res.token);
+        localStorage.setItem('wcc_user', JSON.stringify(res.user));
+        router.push('/dashboard');
+      }
+    } catch (err) {
+      console.error('Google Sign Up Error:', err);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError('Google registration popup was closed before completing.');
+      } else {
+        setError(err.message || 'Google registration failed. Please try again.');
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const upazilas = ['ঝালকাঠি সদর', 'নলছিটি', 'রাজাপুর', 'কাঠালিয়া'];
-
-  const volunteerInterestOptions = [
-    'ফ্রি মেডিকেল ও হেলথ ক্যাম্প',
-    'বৃক্ষরোপণ ও পরিবেশ সুরক্ষা',
-    'দরিদ্র শিক্ষার্থীদের পাঠদান ও বই বিতরণ',
-    'আইটি, ওয়েব ও মিডিয়া সাপোর্ট',
-    'জরুরি ত্রাণ ও দুর্যোগ সহায়তা'
-  ];
 
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
@@ -108,48 +111,18 @@ function RegisterForm() {
             Join We Can Change (WCC)
           </h1>
           <p className="text-xs sm:text-sm text-slate-500">
-            Choose your participation track and become a driving force for society.
+            Sign up below to receive your official WCC membership ID and access services.
           </p>
         </div>
 
-        {/* Role Toggle Switch */}
-        <div className="grid grid-cols-2 gap-2 bg-slate-200 p-1.5 rounded-2xl">
-          <button
-            type="button"
-            onClick={() => setRole('member')}
-            className={`flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-xs transition-all ${
-              role === 'member'
-                ? 'bg-white text-[#B62A35] shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            <span>General Member</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setRole('volunteer')}
-            className={`flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-xs transition-all ${
-              role === 'volunteer'
-                ? 'bg-[#F1AD1A] text-slate-950 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>Youth Volunteer</span>
-          </button>
-        </div>
-
         {/* Main Card */}
-        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-          <div className="border-b border-slate-100 pb-4">
+        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+          <div className="border-b border-slate-100 pb-3">
             <h2 className="text-base font-bold text-slate-900">
-              {role === 'volunteer' ? 'Volunteer Registration Track' : 'Official Membership Application'}
+              Official Membership Registration
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              {role === 'volunteer'
-                ? 'Volunteers participate in on-ground camps, relief drives, and earn verified service hours.'
-                : 'Members receive official WCC Digital ID cards, voting rights, and directory recognition.'}
+              Receive your official WCC Digital ID card and member portal access.
             </p>
           </div>
 
@@ -159,6 +132,44 @@ function RegisterForm() {
               <span>{error}</span>
             </div>
           )}
+
+          {/* Quick Sign up with Google */}
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={handleGoogleAuth}
+              disabled={googleLoading || loading}
+              className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-xl border border-slate-300 shadow-2xs transition-colors flex items-center justify-center gap-3 text-xs disabled:opacity-50 cursor-pointer"
+            >
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                />
+              </svg>
+              <span>{googleLoading ? 'Connecting to Google...' : 'Sign up with Google'}</span>
+            </button>
+
+            <div className="relative flex py-1 items-center">
+              <div className="grow border-t border-slate-200"></div>
+              <span className="shrink mx-3 text-slate-400 text-[11px] uppercase font-bold tracking-wider">
+                Or register with email
+              </span>
+              <div className="grow border-t border-slate-200"></div>
+            </div>
+          </div>
 
           <form onSubmit={handleRegister} className="space-y-4 text-xs">
             <div>
@@ -238,71 +249,36 @@ function RegisterForm() {
               </div>
             </div>
 
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">Preferred Wing (উইং নির্বাচন)</label>
-              <select
-                value={wing}
-                onChange={(e) => setWing(e.target.value)}
-                className="w-full p-2.5 border border-slate-200 rounded-xl focus:border-[#B62A35] focus:outline-hidden"
-              >
-                {wings.map((w) => (
-                  <option key={w} value={w}>
-                    {w}
-                  </option>
-                ))}
-              </select>
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 flex items-start gap-2">
+              <Sparkles className="w-4 h-4 text-[#F1AD1A] shrink-0 mt-0.5" />
+              <span>
+                <strong>Wing & Volunteer Selection:</strong> You are registered as a General Member. You can request your preferred wing (Education, Health, ICT, Environment, etc.) or apply to become a volunteer from your dashboard after signing in.
+              </span>
             </div>
-
-            {/* Volunteer-specific interest selection */}
-            {role === 'volunteer' && (
-              <div className="space-y-2 pt-2 border-t border-slate-100">
-                <label className="block font-semibold text-slate-700">
-                  Areas of Interest for Volunteering (স্বেচ্ছাসেবায় আগ্রহের ক্ষেত্র)
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {volunteerInterestOptions.map((opt) => (
-                    <label
-                      key={opt}
-                      className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={interests.includes(opt)}
-                        onChange={() => toggleInterest(opt)}
-                        className="rounded text-[#F1AD1A] focus:ring-[#F1AD1A]"
-                      />
-                      <span className="text-[11px] text-slate-700 font-medium">{opt}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <button
               type="submit"
-              disabled={loading}
-              className={`w-full py-3 px-4 font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 mt-4 ${
-                role === 'volunteer'
-                  ? 'bg-[#F1AD1A] hover:bg-[#D9980F] text-slate-950'
-                  : 'bg-[#B62A35] hover:bg-[#9E1F2A] text-white'
-              }`}
+              disabled={loading || googleLoading}
+              className="w-full py-3 px-4 font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 mt-4 bg-[#B62A35] hover:bg-[#9E1F2A] text-white cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
-              <span>
-                {loading
-                  ? 'Registering Account...'
-                  : role === 'volunteer'
-                  ? 'Confirm Volunteer Registration'
-                  : 'Submit Membership Application'}
-              </span>
+              <span>{loading ? 'Generating Membership ID...' : 'Complete Registration & Get ID'}</span>
             </button>
           </form>
 
-          <div className="pt-2 text-center text-xs text-slate-500 border-t border-slate-100">
-            Already have an account?{' '}
-            <Link href="/login" className="font-bold text-[#B62A35] hover:underline">
-              Portal Login
-            </Link>
+          <div className="pt-2 text-center text-xs text-slate-500 border-t border-slate-100 space-y-2">
+            <div>
+              Already have an account or ID?{' '}
+              <Link href="/login" className="font-bold text-[#B62A35] hover:underline">
+                Sign in to WCC
+              </Link>
+            </div>
+            <div>
+              <Link href="/" className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-[#B62A35]">
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Guest Site</span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

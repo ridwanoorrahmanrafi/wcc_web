@@ -241,27 +241,19 @@ export default function HomePage() {
                 ) : (
                   <>
                     <Link
-                      href="/register?role=member"
-                      className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#B62A35] hover:bg-[#9E1F2A] text-white font-bold text-sm shadow-lg transition-all hover:scale-[1.02]"
-                    >
-                      <Users className="w-4 h-4" />
-                      <span>Become a Member</span>
-                    </Link>
-
-                    <Link
-                      href="/register?role=volunteer"
-                      className="flex items-center gap-2 px-5 py-3.5 rounded-xl bg-[#F1AD1A] hover:bg-[#D9980F] text-slate-950 font-bold text-sm shadow-lg transition-all hover:scale-[1.02]"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      <span>Join as Volunteer</span>
-                    </Link>
-
-                    <Link
                       href="/login"
-                      className="flex items-center gap-2 px-5 py-3.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/30 text-white font-semibold text-sm backdrop-blur transition-all"
+                      className="flex items-center gap-2 px-7 py-3.5 rounded-xl bg-[#B62A35] hover:bg-[#9E1F2A] text-white font-bold text-sm shadow-xl transition-all hover:scale-[1.02]"
                     >
                       <LogIn className="w-4 h-4" />
-                      <span>Portal Login</span>
+                      <span>Join WCC / Sign In</span>
+                    </Link>
+
+                    <Link
+                      href="/register"
+                      className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#F1AD1A] hover:bg-[#D9980F] text-slate-950 font-bold text-sm shadow-lg transition-all hover:scale-[1.02]"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      <span>Register Here</span>
                     </Link>
                   </>
                 )}
@@ -627,16 +619,18 @@ export default function HomePage() {
 
             <div className="pt-2 flex flex-wrap gap-3">
               <Link
-                href="/register?role=member"
-                className="px-6 py-3 bg-[#B62A35] hover:bg-[#9E1F2A] text-white font-bold rounded-xl text-xs shadow-md transition-all"
+                href="/login"
+                className="px-6 py-3 bg-[#B62A35] hover:bg-[#9E1F2A] text-white font-bold rounded-xl text-xs shadow-md transition-all flex items-center gap-2"
               >
-                Become a Member
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Join WCC / Sign In</span>
               </Link>
               <Link
-                href="/register?role=volunteer"
-                className="px-6 py-3 bg-[#F1AD1A] hover:bg-[#D9980F] text-slate-950 font-bold rounded-xl text-xs shadow-md transition-all"
+                href="/register"
+                className="px-6 py-3 bg-[#F1AD1A] hover:bg-[#D9980F] text-slate-950 font-bold rounded-xl text-xs shadow-md transition-all flex items-center gap-2"
               >
-                Join as Volunteer
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Register Online</span>
               </Link>
             </div>
           </div>
@@ -676,16 +670,18 @@ export default function HomePage() {
           </p>
           <div className="pt-2 flex flex-wrap justify-center gap-3">
             <Link
-              href="/register?role=member"
-              className="px-8 py-3.5 bg-[#F1AD1A] hover:bg-[#D9980F] text-slate-950 font-bold rounded-xl text-sm shadow-xl transition-all hover:scale-105"
+              href="/login"
+              className="px-8 py-3.5 bg-[#F1AD1A] hover:bg-[#D9980F] text-slate-950 font-bold rounded-xl text-sm shadow-xl transition-all hover:scale-105 flex items-center gap-2"
             >
-              Become a Member Now
+              <LogIn className="w-4 h-4" />
+              <span>Join WCC / Sign In</span>
             </Link>
             <Link
-              href="/register?role=volunteer"
-              className="px-8 py-3.5 bg-white/20 hover:bg-white/30 border border-white/30 text-white font-bold rounded-xl text-sm backdrop-blur transition-all"
+              href="/register"
+              className="px-8 py-3.5 bg-white/20 hover:bg-white/30 border border-white/30 text-white font-bold rounded-xl text-sm backdrop-blur transition-all flex items-center gap-2"
             >
-              Join Volunteer Corps
+              <UserPlus className="w-4 h-4" />
+              <span>Register Here</span>
             </Link>
           </div>
           <span className="block text-xs text-slate-300 pt-2">Takes less than 2 minutes to register online.</span>

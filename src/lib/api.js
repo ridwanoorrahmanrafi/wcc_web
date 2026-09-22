@@ -46,6 +46,12 @@ export const api = {
   deleteMember: (id) => request(`/members/${id}`, { method: 'DELETE' }),
   getMemberStats: () => request('/members/stats'),
   verifyMember: (id) => request(`/members/verify/${id}`),
+  submitMemberRequest: (data) => request('/members/requests', { method: 'POST', body: JSON.stringify(data) }),
+  getMemberRequests: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/members/requests?${query}`);
+  },
+  reviewMemberRequest: (id, data) => request(`/members/requests/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
   // Finance
   getFinanceDashboard: () => request('/finance/dashboard'),
@@ -75,6 +81,7 @@ export const api = {
   // Auth
   login: (credentials) => request('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
   register: (userData) => request('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
+  googleLogin: (data) => request('/auth/google', { method: 'POST', body: JSON.stringify(data) }),
   getMe: () => request('/auth/me'),
 
   // Volunteer Logs
