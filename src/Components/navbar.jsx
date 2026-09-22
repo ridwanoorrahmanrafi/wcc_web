@@ -30,16 +30,19 @@ export default function Navbar() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('wcc_user');
-      if (stored) {
-        setUser(JSON.parse(stored));
-      } else {
+    const timer = setTimeout(() => {
+      try {
+        const stored = localStorage.getItem('wcc_user');
+        if (stored) {
+          setUser(JSON.parse(stored));
+        } else {
+          setUser(null);
+        }
+      } catch (e) {
         setUser(null);
       }
-    } catch (e) {
-      setUser(null);
-    }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [pathname]);
 
   const handleLogout = () => {
@@ -55,9 +58,11 @@ export default function Navbar() {
       // Guest navigation
       return [
         { name: 'Home', href: '/', icon: Home },
-        { name: 'About Us', href: '/#about', icon: null },
-        { name: 'Focus Areas', href: '/#focus-areas', icon: null },
-        { name: 'Chairman', href: '/#chairman', icon: null },
+        { name: 'Vision & Mission', href: '/vision-mission', icon: null },
+        { name: 'Our Wings', href: '/wings', icon: null },
+        { name: 'Programs', href: '/programs', icon: null },
+        { name: 'Events', href: '/events', icon: null },
+        { name: 'Report Issue', href: '/report-issue', icon: null },
         { name: 'Verify ID', href: '/verify', icon: ShieldCheck }
       ];
     }

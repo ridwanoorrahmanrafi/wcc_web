@@ -26,6 +26,7 @@ function RegisterForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
+  const [accountType, setAccountType] = useState('member'); // 'member' | 'volunteer'
   const [wing, setWing] = useState('সাধারণ উইং');
   const [upazila, setUpazila] = useState('ঝালকাঠি সদর');
   const [loading, setLoading] = useState(false);
@@ -42,7 +43,7 @@ function RegisterForm() {
         name,
         email,
         password,
-        role: 'member',
+        role: accountType === 'volunteer' ? 'volunteer' : 'member',
         phone,
         volunteerWing: wing,
         volunteerInterests: []
@@ -51,7 +52,7 @@ function RegisterForm() {
       if (res.token) {
         localStorage.setItem('wcc_token', res.token);
         localStorage.setItem('wcc_user', JSON.stringify(res.user));
-        alert('Congratulations! You have successfully registered as a Member with WCC! Your digital ID has been generated.');
+        alert(`Congratulations! You have successfully registered as a ${accountType === 'volunteer' ? 'Volunteer' : 'Member'} with WCC! Your digital ID has been generated.`);
         router.push('/dashboard');
       }
     } catch (err) {
@@ -172,6 +173,37 @@ function RegisterForm() {
           </div>
 
           <form onSubmit={handleRegister} className="space-y-4 text-xs">
+            {/* Account Type Selector */}
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1.5">I want to register as</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAccountType('member')}
+                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    accountType === 'member'
+                      ? 'bg-rose-50 border-[#B62A35] text-[#B62A35] shadow-xs'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>General Member</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAccountType('volunteer')}
+                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    accountType === 'volunteer'
+                      ? 'bg-amber-50 border-[#F1AD1A] text-amber-900 shadow-xs'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#F1AD1A]" />
+                  <span>Volunteer Applicant</span>
+                </button>
+              </div>
+            </div>
+
             <div>
               <label className="block font-semibold text-slate-700 mb-1">Full Name (সম্পূর্ণ নাম)</label>
               <input
@@ -271,6 +303,12 @@ function RegisterForm() {
               Already have an account or ID?{' '}
               <Link href="/login" className="font-bold text-[#B62A35] hover:underline">
                 Sign in to WCC
+              </Link>
+            </div>
+            <div>
+              Forgot your password?{' '}
+              <Link href="/forgot-password" className="font-bold text-[#B62A35] hover:underline">
+                Reset it here
               </Link>
             </div>
             <div>

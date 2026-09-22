@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Award,
   Calendar,
+  CalendarDays,
   Sparkles,
   ExternalLink,
   LogOut,
@@ -24,7 +25,8 @@ import {
   X,
   User,
   FileText,
-  HeartHandshake
+  HeartHandshake,
+  AlertTriangle
 } from 'lucide-react';
 
 function SidebarInner({ user, collapsed, setCollapsed, onClose, isMobile }) {
@@ -44,6 +46,8 @@ function SidebarInner({ user, collapsed, setCollapsed, onClose, isMobile }) {
     switch (role) {
       case 'admin':
         return { text: 'Admin', color: 'bg-rose-500/20 text-rose-300 border-rose-500/30' };
+      case 'coordinator':
+        return { text: 'Coordinator', color: 'bg-purple-500/20 text-purple-300 border-purple-500/30' };
       case 'volunteer':
         return { text: 'Volunteer', color: 'bg-amber-500/20 text-[#F1AD1A] border-amber-500/30' };
       case 'finance_officer':
@@ -61,6 +65,16 @@ function SidebarInner({ user, collapsed, setCollapsed, onClose, isMobile }) {
           title: 'CORE OVERSIGHT',
           items: [
             { id: 'overview', label: 'Dashboard Overview', icon: LayoutDashboard, href: '/dashboard' },
+            ...(user.role === 'admin'
+              ? [
+                  { id: 'coordinators', label: 'Coordinators Hub', icon: ShieldCheck, href: '/dashboard?tab=coordinators' },
+                  { id: 'wings', label: 'Wings Management', icon: Sparkles, href: '/admin/wings' },
+                  { id: 'programs', label: 'Programs Hub', icon: Calendar, href: '/admin/programs' },
+                  { id: 'events', label: 'Events Hub', icon: CalendarDays, href: '/admin/events' },
+                  { id: 'issues', label: 'Community Issues', icon: AlertTriangle, href: '/admin/issues' }
+                ]
+              : []),
+            { id: 'profile', label: 'My Profile & Settings', icon: User, href: '/profile' },
             { id: 'member-requests', label: 'Member Requests', icon: HeartHandshake, href: '/dashboard?tab=requests' },
             { id: 'members', label: 'Member Directory', icon: Users, href: '/members' },
             { id: 'add-member', label: 'Register Member', icon: UserPlus, href: '/members/new' },
@@ -86,12 +100,38 @@ function SidebarInner({ user, collapsed, setCollapsed, onClose, isMobile }) {
       ];
     }
 
+    if (user.role === 'coordinator') {
+      const assignedWingSlug = user.assignedWing?.slug || '';
+      return [
+        {
+          title: 'WING OPERATIONS',
+          items: [
+            { id: 'overview', label: 'Coordinator Hub', icon: LayoutDashboard, href: '/dashboard' },
+            { id: 'profile', label: 'Coordinator Profile', icon: User, href: '/profile' },
+            { id: 'programs', label: 'Wing Programs', icon: Calendar, href: '/admin/programs' },
+            { id: 'events', label: 'Wing Events', icon: CalendarDays, href: '/admin/events' },
+            { id: 'issues', label: 'Community Issues', icon: AlertTriangle, href: '/admin/issues' }
+          ]
+        },
+        {
+          title: 'COMMUNITY & WING',
+          items: [
+            ...(assignedWingSlug
+              ? [{ id: 'public-wing', label: 'My Public Wing', icon: Sparkles, href: `/wings/${assignedWingSlug}` }]
+              : [{ id: 'public-wings', label: 'Explore Wings', icon: Sparkles, href: '/wings' }]),
+            { id: 'verify', label: 'Public QR Verification', icon: ShieldCheck, href: '/verify' }
+          ]
+        }
+      ];
+    }
+
     if (user.role === 'volunteer') {
       return [
         {
           title: 'VOLUNTEER CORPS',
           items: [
             { id: 'hub', label: 'Volunteer Hub', icon: LayoutDashboard, href: '/dashboard?tab=hub' },
+            { id: 'profile', label: 'Volunteer Profile', icon: User, href: '/profile' },
             { id: 'requests', label: 'Wing Requests', icon: HeartHandshake, href: '/dashboard?tab=requests' },
             { id: 'badge', label: 'My Digital Badge', icon: Award, href: '/dashboard?tab=badge' },
             { id: 'log', label: 'Log Service Hours', icon: Clock, href: '/dashboard?tab=log' },
@@ -114,9 +154,9 @@ function SidebarInner({ user, collapsed, setCollapsed, onClose, isMobile }) {
         title: 'MY MEMBERSHIP',
         items: [
           { id: 'hub', label: 'Member Portal', icon: LayoutDashboard, href: '/dashboard?tab=hub' },
+          { id: 'profile', label: 'Membership Profile', icon: User, href: '/profile' },
           { id: 'requests', label: 'Wing & Volunteer Hub', icon: HeartHandshake, href: '/dashboard?tab=requests' },
-          { id: 'id-card', label: 'Official Digital ID', icon: Award, href: '/dashboard?tab=id-card' },
-          { id: 'profile', label: 'Membership Profile', icon: User, href: '/dashboard?tab=profile' }
+          { id: 'id-card', label: 'Official Digital ID', icon: Award, href: '/dashboard?tab=id-card' }
         ]
       },
       {
@@ -254,17 +294,22 @@ function SidebarInner({ user, collapsed, setCollapsed, onClose, isMobile }) {
 
         {/* User Profile Snippet & Logout */}
         <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5 overflow-hidden">
+          <Link
+            href="/profile"
+            onClick={onClose}
+            title="Manage My Profile"
+            className="flex items-center gap-2.5 overflow-hidden hover:opacity-85 transition-opacity flex-1"
+          >
             <div className="w-8 h-8 rounded-full bg-[#B62A35]/20 text-[#F1AD1A] border border-[#F1AD1A]/40 flex items-center justify-center shrink-0 font-bold text-xs">
               {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
             </div>
             {!collapsed && (
               <div className="truncate">
-                <div className="text-xs font-bold text-white truncate">{user.name || 'User'}</div>
+                <div className="text-xs font-bold text-white truncate hover:text-[#F1AD1A] transition-colors">{user.name || 'User'}</div>
                 <div className="text-[10px] text-slate-400 truncate">{user.email}</div>
               </div>
             )}
-          </div>
+          </Link>
 
           <button
             onClick={handleLogout}

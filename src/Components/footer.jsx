@@ -78,23 +78,29 @@ export default function Footer() {
             <h4 className="text-xs font-bold uppercase tracking-wider text-[#F1AD1A]">Quick Explore</h4>
             <ul className="space-y-2.5 text-sm">
               <li>
-                <Link href="/#about" className="hover:text-white transition-colors">
-                  About Organization
+                <Link href="/vision-mission" className="hover:text-white transition-colors">
+                  Vision & Mission
                 </Link>
               </li>
               <li>
-                <Link href="/#focus-areas" className="hover:text-white transition-colors">
-                  Key Focus Areas
+                <Link href="/wings" className="hover:text-white transition-colors">
+                  Organizational Wings
                 </Link>
               </li>
               <li>
-                <Link href="/#chairman" className="hover:text-white transition-colors">
-                  Meet Our Chairman
+                <Link href="/programs" className="hover:text-white transition-colors">
+                  Our Programs
                 </Link>
               </li>
               <li>
-                <Link href="/#updates" className="hover:text-white transition-colors">
-                  Community Updates
+                <Link href="/events" className="hover:text-white transition-colors">
+                  Community Events
+                </Link>
+              </li>
+              <li>
+                <Link href="/report-issue" className="hover:text-[#F1AD1A] transition-colors flex items-center gap-1.5 font-medium text-amber-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#F1AD1A]"></span>
+                  <span>Report Civic Issue</span>
                 </Link>
               </li>
               <li>

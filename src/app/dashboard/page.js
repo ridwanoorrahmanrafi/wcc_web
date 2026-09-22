@@ -69,6 +69,11 @@ function DashboardContent() {
     pendingMembers: 0,
     totalLiquidity: 0
   });
+  const [impactStats, setImpactStats] = useState({
+    totalPrograms: 0,
+    totalVolunteers: 0,
+    resolvedIssues: 0
+  });
   const [pendingList, setPendingList] = useState([]);
   const [activities, setActivities] = useState([]);
 
@@ -104,10 +109,14 @@ function DashboardContent() {
 
   // Sync tab from URL if present
   useEffect(() => {
+    if (requestedTab === 'profile') {
+      router.push('/profile');
+      return;
+    }
     if (requestedTab) {
       setActiveTab(requestedTab);
     }
-  }, [requestedTab]);
+  }, [requestedTab, router]);
 
   useEffect(() => {
     async function initDashboard() {
@@ -124,12 +133,13 @@ function DashboardContent() {
         // Fetch data according to role strictly from MongoDB
         if (currentUser.role === 'admin' || currentUser.role === 'finance_officer') {
           if (!requestedTab) setActiveTab('overview');
-          const [memStats, finDash, pendingMembers, acts, reqs] = await Promise.all([
+          const [memStats, finDash, pendingMembers, acts, reqs, impStats] = await Promise.all([
             api.getMemberStats().catch(() => ({ total: 0, active: 0, pending: 0 })),
             api.getFinanceDashboard().catch(() => ({ totalLiquidity: 0 })),
             api.getMembers({ status: 'Pending', limit: 10 }).catch(() => ({ members: [] })),
             api.getActivities().catch(() => []),
-            api.getMemberRequests().catch(() => [])
+            api.getMemberRequests().catch(() => []),
+            api.getImpactStats().catch(() => ({ totalPrograms: 0, totalVolunteers: 0, resolvedIssues: 0 }))
           ]);
 
           setAdminStats({
@@ -138,6 +148,7 @@ function DashboardContent() {
             pendingMembers: memStats.pending || 0,
             totalLiquidity: finDash.totalLiquidity || 0
           });
+          setImpactStats(impStats || { totalPrograms: 0, totalVolunteers: 0, resolvedIssues: 0 });
           setPendingList(pendingMembers.members || []);
           setActivities(acts || []);
           setAdminRequests(reqs || []);
@@ -278,7 +289,7 @@ function DashboardContent() {
         reviewedBy: user.name || 'Admin'
       });
       setAdminRequests((prev) => prev.map((r) => (r._id === requestId ? updated : r)));
-      alert(`Request has been marked as ${status.toUpperCase()}! Database updated.`);
+      alert(`Request has been marked as ${status.toUpperCase()}! Status updated successfully.`);
     } catch (err) {
       alert('Error updating request status: ' + err.message);
     } finally {
@@ -306,7 +317,7 @@ function DashboardContent() {
         localStorage.setItem('wcc_user', JSON.stringify(updated));
         setUser(updated);
       }
-      setVolunteerLogSuccess(`Successfully recorded ${added} service hours to MongoDB!`);
+      setVolunteerLogSuccess(`Successfully recorded ${added} service hours! Your service record has been updated.`);
       setLogNotes('');
       setTimeout(() => setVolunteerLogSuccess(''), 4000);
     } catch (err) {
@@ -320,7 +331,7 @@ function DashboardContent() {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-3">
         <div className="w-10 h-10 border-4 border-[#B62A35] border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-sm font-semibold text-slate-500">Connecting to secure database session...</p>
+        <p className="text-sm font-semibold text-slate-500">Loading your secure workspace...</p>
       </div>
     );
   }
@@ -355,7 +366,7 @@ function DashboardContent() {
               {user.role}
             </span>
           </div>
-          <p className="text-xs text-slate-500">Live MongoDB Atlas Database Connected</p>
+          <p className="text-xs text-slate-500">Central Portal Online & Verified</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -453,6 +464,42 @@ function DashboardContent() {
               </div>
             </div>
 
+            {/* Grassroots Impact Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase text-slate-400 block tracking-wider">Programs Run</span>
+                  <div className="text-xl font-black text-slate-900">{impactStats.totalPrograms}</div>
+                  <span className="text-[10px] text-blue-600 font-semibold">Community Initiatives</span>
+                </div>
+                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
+                  <Calendar className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase text-slate-400 block tracking-wider">Volunteers</span>
+                  <div className="text-xl font-black text-[#A6772A]">{impactStats.totalVolunteers}</div>
+                  <span className="text-[10px] text-emerald-600 font-semibold">Active Corps</span>
+                </div>
+                <div className="w-9 h-9 rounded-xl bg-amber-50 text-[#A6772A] flex items-center justify-center">
+                  <HeartHandshake className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase text-slate-400 block tracking-wider">Issues Solved</span>
+                  <div className="text-xl font-black text-emerald-600">{impactStats.resolvedIssues}</div>
+                  <span className="text-[10px] text-slate-500 font-semibold">Civic Resolutions</span>
+                </div>
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+              </div>
+            </div>
+
             {/* Admin Overview Tab Content */}
             {activeTab === 'overview' && (
               <>
@@ -469,7 +516,7 @@ function DashboardContent() {
                       <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#B62A35] transition-colors" />
                     </div>
                     <h3 className="text-sm font-bold text-slate-900">Member Directory</h3>
-                    <p className="text-xs text-slate-500">View, search, or add members into MongoDB.</p>
+                    <p className="text-xs text-slate-500">View, search, or register verified members.</p>
                   </Link>
 
                   <Link
@@ -508,7 +555,7 @@ function DashboardContent() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-base font-black text-slate-900">Pending Membership Registration Review</h3>
-                      <p className="text-xs text-slate-500">Applications saved in MongoDB awaiting verification</p>
+                      <p className="text-xs text-slate-500">Applications submitted and awaiting official verification</p>
                     </div>
                     <Link href="/members/new" className="text-xs font-bold text-[#B62A35] hover:underline flex items-center gap-1">
                       <PlusCircle className="w-3.5 h-3.5" />
@@ -519,7 +566,7 @@ function DashboardContent() {
                   {pendingList.length === 0 ? (
                     <div className="p-8 text-center text-xs text-slate-500 bg-slate-50 rounded-2xl space-y-2">
                       <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
-                      <p className="font-semibold text-slate-700">No pending member registration records in the database.</p>
+                      <p className="font-semibold text-slate-700">No pending member registration applications found.</p>
                       <p className="text-[11px] text-slate-400">New sign ups appear here live.</p>
                     </div>
                   ) : (
@@ -1098,59 +1145,6 @@ function DashboardContent() {
         {/* ========================================================= */}
         {user.role === 'volunteer' && (
           <div className="space-y-6">
-            {/* Volunteer Tab Switcher Pills */}
-            <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
-              <button
-                onClick={() => setActiveTab('hub')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                  activeTab === 'hub' ? 'bg-[#F1AD1A] text-slate-950' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                All Overview
-              </button>
-              <button
-                onClick={() => setActiveTab('requests')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${
-                  activeTab === 'requests' ? 'bg-[#F1AD1A] text-slate-950' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Wing Transfer Requests</span>
-              </button>
-              <button
-                onClick={() => setActiveTab('badge')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                  activeTab === 'badge' ? 'bg-[#F1AD1A] text-slate-950' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                My Digital Badge
-              </button>
-              <button
-                onClick={() => setActiveTab('log')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                  activeTab === 'log' ? 'bg-[#F1AD1A] text-slate-950' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                Log Hours
-              </button>
-              <button
-                onClick={() => setActiveTab('history')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                  activeTab === 'history' ? 'bg-[#F1AD1A] text-slate-950' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                Service History
-              </button>
-              <button
-                onClick={() => setActiveTab('drives')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                  activeTab === 'drives' ? 'bg-[#F1AD1A] text-slate-950' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                Upcoming Drives
-              </button>
-            </div>
-
             {/* Flash success banner */}
             {requestSuccessMsg && (
               <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3 text-emerald-800 text-xs font-semibold animate-fadeIn">
@@ -1160,234 +1154,224 @@ function DashboardContent() {
             )}
 
             {/* Wing Change Card for Volunteers */}
-            {(activeTab === 'hub' || activeTab === 'requests') && (
-              <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 uppercase">
-                    Volunteer Assignment
-                  </span>
-                  <h3 className="text-base font-black text-slate-900 mt-1">
-                    Assigned Wing: <span className="text-[#B62A35]">{currentWingName}</span>
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Want to contribute to another operational wing? You can submit a wing transfer request for admin review.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setWingModalOpen(true)}
-                  className="px-4 py-2.5 bg-[#B62A35] hover:bg-[#9E1F2A] text-white font-bold rounded-xl text-xs transition-colors shadow-xs flex items-center gap-2 shrink-0 cursor-pointer"
-                >
-                  <Layers className="w-4 h-4" />
-                  <span>Request Wing Transfer</span>
-                </button>
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 uppercase">
+                  Volunteer Assignment
+                </span>
+                <h3 className="text-base font-black text-slate-900 mt-1">
+                  Assigned Wing: <span className="text-[#B62A35]">{currentWingName}</span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Want to contribute to another operational wing? You can submit a wing transfer request for admin review.
+                </p>
               </div>
-            )}
+              <button
+                onClick={() => setWingModalOpen(true)}
+                className="px-4 py-2.5 bg-[#B62A35] hover:bg-[#9E1F2A] text-white font-bold rounded-xl text-xs transition-colors shadow-xs flex items-center gap-2 shrink-0 cursor-pointer"
+              >
+                <Layers className="w-4 h-4" />
+                <span>Request Wing Transfer</span>
+              </button>
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               {/* Volunteer Badge Card */}
-              {(activeTab === 'hub' || activeTab === 'badge') && (
-                <div className="lg:col-span-5 space-y-4" id="badge">
-                  <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-base font-black text-slate-900">Official Volunteer Badge</h3>
-                        <p className="text-xs text-slate-500">Youth Volunteer Service Credential</p>
+              <div className="lg:col-span-5 space-y-4" id="badge">
+                <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-base font-black text-slate-900">Official Volunteer Badge</h3>
+                      <p className="text-xs text-slate-500">Youth Volunteer Service Credential</p>
+                    </div>
+                    <span className="text-xs bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded border border-amber-200">
+                      VOLUNTEER
+                    </span>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-amber-600 via-[#8E1A23] to-[#1D3557] text-white p-6 rounded-2xl shadow-xl border-2 border-[#F1AD1A] relative overflow-hidden">
+                    <div className="flex items-center justify-between pb-3 border-b border-white/20 mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-full bg-white p-1 border-2 border-[#F1AD1A]">
+                          <img src="/landing/wcc.png" alt="WCC" className="w-full h-full object-contain" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-black tracking-wide text-white">WE CAN CHANGE</div>
+                          <div className="text-[9px] text-[#F1AD1A] font-bold">VOLUNTEER CORPS</div>
+                        </div>
                       </div>
-                      <span className="text-xs bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded border border-amber-200">
-                        VOLUNTEER
-                      </span>
+                      <Sparkles className="w-5 h-5 text-[#F1AD1A]" />
                     </div>
 
-                    <div className="bg-gradient-to-br from-amber-600 via-[#8E1A23] to-[#1D3557] text-white p-6 rounded-2xl shadow-xl border-2 border-[#F1AD1A] relative overflow-hidden">
-                      <div className="flex items-center justify-between pb-3 border-b border-white/20 mb-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-10 h-10 rounded-full bg-white p-1 border-2 border-[#F1AD1A]">
-                            <img src="/landing/wcc.png" alt="WCC" className="w-full h-full object-contain" />
-                          </div>
-                          <div>
-                            <div className="text-xs font-black tracking-wide text-white">WE CAN CHANGE</div>
-                            <div className="text-[9px] text-[#F1AD1A] font-bold">VOLUNTEER CORPS</div>
-                          </div>
-                        </div>
-                        <Sparkles className="w-5 h-5 text-[#F1AD1A]" />
+                    <div className="flex gap-4 items-center">
+                      <div className="w-16 h-20 rounded-xl bg-slate-900/60 border-2 border-white/30 flex items-center justify-center text-center p-2 shrink-0">
+                        <Award className="w-8 h-8 text-[#F1AD1A]" />
                       </div>
+                      <div className="space-y-1">
+                        <h4 className="text-base font-black text-white">{user.name}</h4>
+                        <p className="text-xs font-mono font-bold text-[#F1AD1A]">ID: {user.memberId || 'WCC-VOL-0001'}</p>
+                        <p className="text-xs text-slate-200">Wing: {currentWingName}</p>
+                        <p className="text-xs text-slate-200">Total Service Hours: <span className="font-bold text-[#F1AD1A]">{volunteerHours} hrs</span></p>
+                      </div>
+                    </div>
 
-                      <div className="flex gap-4 items-center">
-                        <div className="w-16 h-20 rounded-xl bg-slate-900/60 border-2 border-white/30 flex items-center justify-center text-center p-2 shrink-0">
-                          <Award className="w-8 h-8 text-[#F1AD1A]" />
-                        </div>
-                        <div className="space-y-1">
-                          <h4 className="text-base font-black text-white">{user.name}</h4>
-                          <p className="text-xs font-mono font-bold text-[#F1AD1A]">ID: {user.memberId || 'WCC-VOL-0001'}</p>
-                          <p className="text-xs text-slate-200">Wing: {currentWingName}</p>
-                          <p className="text-xs text-slate-200">Total Hours in DB: <span className="font-bold text-[#F1AD1A]">{volunteerHours} hrs</span></p>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 pt-3 border-t border-white/15 flex items-center justify-between text-[10px] text-slate-300">
-                        <div>Database Record Active</div>
-                        <Link
-                          href={`/verify?id=${encodeURIComponent(user.memberId || 'WCC-VOL-0001')}`}
-                          className="px-2 py-1 bg-white/20 hover:bg-white/30 rounded font-bold text-white text-[10px] transition-colors"
-                        >
-                          Verify Badge
-                        </Link>
-                      </div>
+                    <div className="mt-4 pt-3 border-t border-white/15 flex items-center justify-between text-[10px] text-slate-300">
+                      <div>Official Status: Active</div>
+                      <Link
+                        href={`/verify?id=${encodeURIComponent(user.memberId || 'WCC-VOL-0001')}`}
+                        className="px-2 py-1 bg-white/20 hover:bg-white/30 rounded font-bold text-white text-[10px] transition-colors"
+                      >
+                        Verify Badge
+                      </Link>
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Log Service Hours Form & History */}
-              <div className={activeTab === 'hub' ? 'lg:col-span-7 space-y-6' : 'lg:col-span-12 space-y-6'}>
+              <div className="lg:col-span-7 space-y-6">
                 {/* Log Service Hours Form */}
-                {(activeTab === 'hub' || activeTab === 'log') && (
-                  <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4" id="log">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-base font-black text-slate-900">Log Volunteer Service Hours</h3>
-                        <p className="text-xs text-slate-500">Record your hours to persist directly into MongoDB</p>
-                      </div>
-                      <div className="w-8 h-8 rounded-lg bg-amber-50 text-[#A6772A] flex items-center justify-center">
-                        <Clock className="w-4 h-4" />
-                      </div>
+                <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4" id="log">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-base font-black text-slate-900">Log Volunteer Service Hours</h3>
+                      <p className="text-xs text-slate-500">Record your volunteer activity hours for verified recognition.</p>
                     </div>
+                    <div className="w-8 h-8 rounded-lg bg-amber-50 text-[#A6772A] flex items-center justify-center">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                  </div>
 
-                    {volunteerLogSuccess && (
-                      <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span>{volunteerLogSuccess}</span>
-                      </div>
-                    )}
+                  {volunteerLogSuccess && (
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>{volunteerLogSuccess}</span>
+                    </div>
+                  )}
 
-                    <form onSubmit={handleLogVolunteerHours} className="space-y-3 text-xs">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <label className="block font-semibold text-slate-700 mb-1">Campaign / Drive</label>
-                          <input
-                            type="text"
-                            required
-                            value={logDriveName}
-                            onChange={(e) => setLogDriveName(e.target.value)}
-                            placeholder="e.g. ফ্রি হেলথ ক্যাম্প"
-                            className="w-full p-2.5 border border-slate-200 rounded-xl focus:border-[#B62A35] focus:outline-hidden"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-semibold text-slate-700 mb-1">Hours Served</label>
-                          <input
-                            type="number"
-                            min="0.5"
-                            step="0.5"
-                            max="24"
-                            required
-                            value={logHours}
-                            onChange={(e) => setLogHours(e.target.value)}
-                            className="w-full p-2.5 border border-slate-200 rounded-xl focus:border-[#B62A35] focus:outline-hidden"
-                          />
-                        </div>
-                      </div>
-
+                  <form onSubmit={handleLogVolunteerHours} className="space-y-3 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block font-semibold text-slate-700 mb-1">Contribution Notes</label>
+                        <label className="block font-semibold text-slate-700 mb-1">Campaign / Drive</label>
                         <input
                           type="text"
-                          value={logNotes}
-                          onChange={(e) => setLogNotes(e.target.value)}
-                          placeholder="e.g. Distributed blood test tokens, assisted doctor registration..."
+                          required
+                          value={logDriveName}
+                          onChange={(e) => setLogDriveName(e.target.value)}
+                          placeholder="e.g. ফ্রি হেলথ ক্যাম্প"
                           className="w-full p-2.5 border border-slate-200 rounded-xl focus:border-[#B62A35] focus:outline-hidden"
                         />
                       </div>
-
-                      <button
-                        type="submit"
-                        disabled={submittingLog}
-                        className="px-4 py-2.5 bg-[#F1AD1A] hover:bg-[#D9980F] text-slate-950 font-bold rounded-xl text-xs transition-colors shadow-xs flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
-                      >
-                        <PlusCircle className="w-4 h-4" />
-                        <span>{submittingLog ? 'Saving to Database...' : 'Save Hours to MongoDB'}</span>
-                      </button>
-                    </form>
-                  </div>
-                )}
-
-                {/* Real Service History Table from MongoDB */}
-                {(activeTab === 'hub' || activeTab === 'history') && (
-                  <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4" id="history">
-                    <h3 className="text-base font-black text-slate-900">Service Hours History (From Database)</h3>
-                    {volunteerLogs.length === 0 ? (
-                      <div className="p-6 text-center text-xs text-slate-500 bg-slate-50 rounded-2xl">
-                        <span>No service hours recorded yet in MongoDB. Submit the form above to log your first activity!</span>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                          <thead>
-                            <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
-                              <th className="py-2 px-3">Date</th>
-                              <th className="py-2 px-3">Drive</th>
-                              <th className="py-2 px-3">Hours</th>
-                              <th className="py-2 px-3">Notes</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {volunteerLogs.map((item) => (
-                              <tr key={item._id || item.date} className="hover:bg-slate-50">
-                                <td className="py-2 px-3 text-slate-500">
-                                  {item.date ? new Date(item.date).toLocaleDateString() : 'Today'}
-                                </td>
-                                <td className="py-2 px-3 font-semibold text-slate-800">{item.driveName}</td>
-                                <td className="py-2 px-3 font-bold text-[#A6772A]">+{item.hours} hrs</td>
-                                <td className="py-2 px-3 text-slate-600">{item.notes || '-'}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Upcoming Community Drives */}
-                {(activeTab === 'hub' || activeTab === 'drives') && (
-                  <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4" id="drives">
-                    <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-base font-black text-slate-900">Upcoming Community Action Drives</h3>
-                        <p className="text-xs text-slate-500">Upcoming volunteer opportunities across Jhalokathi</p>
-                      </div>
-                      <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#1D3557] flex items-center justify-center">
-                        <Calendar className="w-4 h-4" />
+                        <label className="block font-semibold text-slate-700 mb-1">Hours Served</label>
+                        <input
+                          type="number"
+                          min="0.5"
+                          step="0.5"
+                          max="24"
+                          required
+                          value={logHours}
+                          onChange={(e) => setLogHours(e.target.value)}
+                          className="w-full p-2.5 border border-slate-200 rounded-xl focus:border-[#B62A35] focus:outline-hidden"
+                        />
                       </div>
                     </div>
 
-                    {activities.length === 0 ? (
-                      <div className="p-8 text-center text-xs text-slate-500 bg-slate-50 rounded-2xl space-y-2">
-                        <Calendar className="w-8 h-8 text-slate-400 mx-auto" />
-                        <p className="font-semibold text-slate-700">No community action drives currently scheduled in the database.</p>
-                        <p className="text-[11px] text-slate-400">Campaigns created in the admin portal will appear here live for volunteers.</p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {activities.map((act) => (
-                          <div key={act.activityId || act._id} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
-                                {act.wing || 'Community Action'}
-                              </span>
-                              <span className="text-xs font-semibold text-slate-500">{act.status || 'Active'}</span>
-                            </div>
-                            <h4 className="text-xs font-black text-slate-900">{act.name}</h4>
-                            <p className="text-[11px] text-slate-500">{act.description || 'Official community welfare drive organized by WCC.'}</p>
-                            <div className="text-[11px] font-semibold text-[#B62A35]">
-                              Venue: {act.venue || 'Jhalokathi'}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Contribution Notes</label>
+                      <input
+                        type="text"
+                        value={logNotes}
+                        onChange={(e) => setLogNotes(e.target.value)}
+                        placeholder="e.g. Distributed blood test tokens, assisted doctor registration..."
+                        className="w-full p-2.5 border border-slate-200 rounded-xl focus:border-[#B62A35] focus:outline-hidden"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={submittingLog}
+                      className="px-4 py-2.5 bg-[#F1AD1A] hover:bg-[#D9980F] text-slate-950 font-bold rounded-xl text-xs transition-colors shadow-xs flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                    >
+                      <PlusCircle className="w-4 h-4" />
+                      <span>{submittingLog ? 'Saving Hours...' : 'Log Volunteer Hours'}</span>
+                    </button>
+                  </form>
+                </div>
+
+                {/* Real Service History Table */}
+                <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4" id="history">
+                  <h3 className="text-base font-black text-slate-900">Service Hours History</h3>
+                  {volunteerLogs.length === 0 ? (
+                    <div className="p-6 text-center text-xs text-slate-500 bg-slate-50 rounded-2xl">
+                      <span>No service hours recorded yet. Submit the form above to log your first activity!</span>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
+                            <th className="py-2 px-3">Date</th>
+                            <th className="py-2 px-3">Drive</th>
+                            <th className="py-2 px-3">Hours</th>
+                            <th className="py-2 px-3">Notes</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {volunteerLogs.map((item) => (
+                            <tr key={item._id || item.date} className="hover:bg-slate-50">
+                              <td className="py-2 px-3 text-slate-500">
+                                {item.date ? new Date(item.date).toLocaleDateString() : 'Today'}
+                              </td>
+                              <td className="py-2 px-3 font-semibold text-slate-800">{item.driveName}</td>
+                              <td className="py-2 px-3 font-bold text-[#A6772A]">+{item.hours} hrs</td>
+                              <td className="py-2 px-3 text-slate-600">{item.notes || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Upcoming Community Drives */}
+                <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4" id="drives">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-base font-black text-slate-900">Upcoming Community Action Drives</h3>
+                      <p className="text-xs text-slate-500">Upcoming volunteer opportunities across Jhalokathi</p>
+                    </div>
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#1D3557] flex items-center justify-center">
+                      <Calendar className="w-4 h-4" />
+                    </div>
                   </div>
-                )}
+
+                  {activities.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-slate-500 bg-slate-50 rounded-2xl space-y-2">
+                      <Calendar className="w-8 h-8 text-slate-400 mx-auto" />
+                      <p className="font-semibold text-slate-700">No community action drives currently scheduled.</p>
+                      <p className="text-[11px] text-slate-400">Campaigns created in the admin portal will appear here live for volunteers.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {activities.map((act) => (
+                        <div key={act.activityId || act._id} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                              {act.wing || 'Community Action'}
+                            </span>
+                            <span className="text-xs font-semibold text-slate-500">{act.status || 'Active'}</span>
+                          </div>
+                          <h4 className="text-xs font-black text-slate-900">{act.name}</h4>
+                          <p className="text-[11px] text-slate-500">{act.description || 'Official community welfare drive organized by WCC.'}</p>
+                          <div className="text-[11px] font-semibold text-[#B62A35]">
+                            Venue: {act.venue || 'Jhalokathi'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -1500,7 +1484,7 @@ function DashboardContent() {
                   className="px-5 py-2.5 bg-[#B62A35] hover:bg-[#9E1F2A] text-white font-bold rounded-xl shadow-xs transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>{submittingRequest ? 'Submitting to Database...' : 'Submit Request'}</span>
+                  <span>{submittingRequest ? 'Submitting Request...' : 'Submit Request'}</span>
                 </button>
               </div>
             </form>
@@ -1599,7 +1583,7 @@ function DashboardContent() {
                   className="px-5 py-2.5 bg-[#F1AD1A] hover:bg-[#D9980F] text-slate-950 font-bold rounded-xl shadow-xs transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>{submittingRequest ? 'Submitting to Database...' : 'Submit Application'}</span>
+                  <span>{submittingRequest ? 'Submitting Application...' : 'Submit Application'}</span>
                 </button>
               </div>
             </form>

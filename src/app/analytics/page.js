@@ -10,13 +10,38 @@ import {
   GraduationCap,
   MapPin,
   ArrowLeft,
-  Activity
+  Activity,
+  Sparkles,
+  Calendar,
+  HeartHandshake,
+  CheckCircle2,
+  RefreshCw,
+  ArrowRight
 } from 'lucide-react';
 import { api } from '@/lib/api';
 
 export default function AnalyticsPage() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Impact Statistics
+  const [impactStats, setImpactStats] = useState(null);
+  const [impactLoading, setImpactLoading] = useState(true);
+  const [impactError, setImpactError] = useState(null);
+
+  const fetchImpactData = async () => {
+    setImpactLoading(true);
+    setImpactError(null);
+    try {
+      const data = await api.getImpactStats();
+      setImpactStats(data);
+    } catch (err) {
+      console.error('Error fetching impact stats:', err);
+      setImpactError(err.message || 'Failed to load impact metrics');
+    } finally {
+      setImpactLoading(false);
+    }
+  };
 
   useEffect(() => {
     async function loadStats() {
@@ -30,6 +55,7 @@ export default function AnalyticsPage() {
       }
     }
     loadStats();
+    fetchImpactData();
   }, []);
 
   if (loading) {
@@ -69,6 +95,102 @@ export default function AnalyticsPage() {
           <ArrowLeft className="w-4 h-4 text-slate-500" />
           <span>Member Directory</span>
         </Link>
+      </div>
+
+      {/* MVP Impact Statistics Strip */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#F1AD1A]" />
+            <h2 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">
+              Grassroots Impact Metrics
+            </h2>
+          </div>
+          {impactError && (
+            <button
+              onClick={fetchImpactData}
+              className="text-xs font-bold text-[#B62A35] hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <RefreshCw className="w-3 h-3" />
+              <span>Retry</span>
+            </button>
+          )}
+        </div>
+
+        {impactLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs animate-pulse space-y-2">
+                <div className="h-3 bg-slate-200 rounded w-24"></div>
+                <div className="h-8 bg-slate-200 rounded w-16"></div>
+                <div className="h-3 bg-slate-200 rounded w-32"></div>
+              </div>
+            ))}
+          </div>
+        ) : impactError ? (
+          <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-xs text-rose-800 flex items-center justify-between">
+            <span>Failed to load impact metrics: {impactError}</span>
+            <button
+              onClick={fetchImpactData}
+              className="px-3 py-1 bg-white border border-rose-300 rounded-lg font-bold text-rose-700 hover:bg-rose-100 cursor-pointer"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Total Programs */}
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-2 relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-slate-500 font-extrabold block uppercase tracking-wider">Total Programs</span>
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#1D3557] flex items-center justify-center">
+                  <Calendar className="w-4 h-4" />
+                </div>
+              </div>
+              <h3 className="text-3xl font-black text-slate-900">{impactStats?.totalPrograms ?? 0}</h3>
+              <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-100">
+                <span className="text-slate-500 font-medium">Operational Wings</span>
+                <Link href="/programs" className="text-[#B62A35] font-bold hover:underline flex items-center gap-0.5">
+                  View Programs <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Total Volunteers */}
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-2 relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-slate-500 font-extrabold block uppercase tracking-wider">Total Volunteers</span>
+                <div className="w-8 h-8 rounded-xl bg-amber-50 text-[#A6772A] flex items-center justify-center">
+                  <HeartHandshake className="w-4 h-4" />
+                </div>
+              </div>
+              <h3 className="text-3xl font-black text-[#A6772A]">{impactStats?.totalVolunteers ?? 0}</h3>
+              <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-100">
+                <span className="text-slate-500 font-medium">Youth Volunteer Corps</span>
+                <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                  Active
+                </span>
+              </div>
+            </div>
+
+            {/* Resolved Issues */}
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-2 relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-slate-500 font-extrabold block uppercase tracking-wider">Resolved Issues</span>
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+              </div>
+              <h3 className="text-3xl font-black text-emerald-600">{impactStats?.resolvedIssues ?? 0}</h3>
+              <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-100">
+                <span className="text-slate-500 font-medium">Community Solutions</span>
+                <Link href="/admin/issues" className="text-[#B62A35] font-bold hover:underline flex items-center gap-0.5">
+                  Track Issues <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* KPI Cards Strip */}

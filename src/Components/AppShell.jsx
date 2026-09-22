@@ -17,8 +17,8 @@ export default function AppShell({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const checkUser = () => {
+    const timer = setTimeout(() => {
+      setMounted(true);
       try {
         const stored = localStorage.getItem('wcc_user');
         if (stored) {
@@ -29,11 +29,9 @@ export default function AppShell({ children }) {
       } catch (e) {
         setUser(null);
       }
-    };
-
-    checkUser();
-    // Close mobile drawer on route change
-    setMobileOpen(false);
+      setMobileOpen(false);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [pathname]);
 
   // Prevent flash before hydration
@@ -45,11 +43,17 @@ export default function AppShell({ children }) {
     );
   }
 
-  const isGuestSite = pathname === '/';
+  const isGuestSite =
+    pathname === '/' ||
+    pathname.startsWith('/wings') ||
+    pathname === '/vision-mission' ||
+    pathname === '/programs' ||
+    pathname.startsWith('/events') ||
+    pathname === '/report-issue';
   const isAuthPage = pathname === '/login' || pathname === '/register';
   const isPublicVerify = pathname === '/verify' && !user;
 
-  // 1. GUEST LANDING PAGE: Only top Navbar & public Footer (NO Sidebar!)
+  // 1. GUEST / PUBLIC SITE: Render top Navbar & public Footer (NO Sidebar!)
   if (isGuestSite || isPublicVerify) {
     return (
       <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900">

@@ -78,13 +78,73 @@ export const api = {
   settleAdvance: (id, data) => request(`/finance/advances/${id}/settle`, { method: 'POST', body: JSON.stringify(data) }),
   getVendors: () => request('/finance/vendors'),
 
-  // Auth
+  // Auth & User Management
   login: (credentials) => request('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
   register: (userData) => request('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
   googleLogin: (data) => request('/auth/google', { method: 'POST', body: JSON.stringify(data) }),
   getMe: () => request('/auth/me'),
+  getProfile: () => request('/auth/profile'),
+  updateProfile: (data) => request('/auth/profile', { method: 'PUT', body: JSON.stringify(data) }),
+  changePassword: (currentPassword, newPassword) => request('/auth/change-password', { method: 'PUT', body: JSON.stringify({ currentPassword, newPassword }) }),
+  forgotPassword: (email) => request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
+  verifyResetToken: (token) => request(`/auth/verify-reset-token?token=${encodeURIComponent(token)}`),
+  resetPassword: (token, newPassword) => request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, newPassword }) }),
+  getUsers: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/auth/users?${query}`);
+  },
+  getCoordinators: () => request('/auth/coordinators'),
+  updateUserWing: (id, assignedWing) => request(`/auth/users/${id}/wing`, { method: 'PATCH', body: JSON.stringify({ assignedWing }) }),
+  updateUserRole: (id, role, assignedWing) => request(`/auth/users/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role, assignedWing }) }),
 
   // Volunteer Logs
   logVolunteerHours: (data) => request('/auth/volunteer/log', { method: 'POST', body: JSON.stringify(data) }),
-  getVolunteerLogs: () => request('/auth/volunteer/logs')
+  getVolunteerLogs: () => request('/auth/volunteer/logs'),
+
+  // Wings
+  getWings: () => request('/wings'),
+  getWing: (slug) => request(`/wings/${slug}`),
+  createWing: (data) => request('/wings', { method: 'POST', body: JSON.stringify(data) }),
+  updateWing: (id, data) => request(`/wings/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteWing: (id) => request(`/wings/${id}`, { method: 'DELETE' }),
+
+  // Programs
+  getPrograms: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/programs?${query}`);
+  },
+  getProgram: (id) => request(`/programs/${id}`),
+  createProgram: (data) => request('/programs', { method: 'POST', body: JSON.stringify(data) }),
+  updateProgram: (id, data) => request(`/programs/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteProgram: (id) => request(`/programs/${id}`, { method: 'DELETE' }),
+
+  // Events
+  getEvents: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/events?${query}`);
+  },
+  getEvent: (id) => request(`/events/${id}`),
+  createEvent: (data) => request('/events', { method: 'POST', body: JSON.stringify(data) }),
+  updateEvent: (id, data) => request(`/events/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteEvent: (id) => request(`/events/${id}`, { method: 'DELETE' }),
+  registerForEvent: (id) => request(`/events/${id}/register`, { method: 'POST' }),
+  getMyEventRegistration: (id) => request(`/events/${id}/my-registration`),
+  getEventRegistrations: (id) => request(`/events/${id}/registrations`),
+  updateEventAttendance: (id, attendees) => request(`/events/${id}/attendance`, { method: 'PATCH', body: JSON.stringify({ attendees }) }),
+
+  // Community Issues
+  createIssue: (data) => request('/issues', { method: 'POST', body: JSON.stringify(data) }),
+  trackIssueByCode: (code) => request(`/issues/track/${encodeURIComponent(code)}`),
+  getIssues: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/issues?${query}`);
+  },
+  getIssue: (id) => request(`/issues/${id}`),
+  updateIssueStatus: (id, status) => request(`/issues/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  assignIssue: (id, data) => request(`/issues/${id}/assign`, { method: 'PATCH', body: JSON.stringify(data) }),
+
+  // Impact Statistics
+  getImpactStats: () => request('/stats/impact')
 };
+
+

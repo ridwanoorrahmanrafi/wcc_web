@@ -61,10 +61,13 @@ export default function HomePage() {
 
   // Check login state
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('wcc_user');
-      if (stored) setUser(JSON.parse(stored));
-    } catch (e) {}
+    const timer = setTimeout(() => {
+      try {
+        const stored = localStorage.getItem('wcc_user');
+        if (stored) setUser(JSON.parse(stored));
+      } catch (e) {}
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Fetch Live Stats from Backend wcc_api
@@ -114,39 +117,45 @@ export default function HomePage() {
 
   const focusAreas = [
     {
+      slug: 'education',
       title: 'শিক্ষা (Education)',
       icon: BookOpen,
       desc: 'মেধাবী ও অসচ্ছল শিক্ষার্থীদের শিক্ষাবৃত্তি, বিনামূল্যে শিক্ষা উপকরণ বিতরণ ও উচ্চশিক্ষা ক্যারিয়ার গাইডেন্স।',
       color: 'bg-rose-50 text-[#B62A35]'
     },
     {
+      slug: 'health',
       title: 'স্বাস্থ্যসেবা (Health Care)',
       icon: Stethoscope,
       desc: 'বিনামূল্যে বিশেষজ্ঞ ডাক্তারদের মেডিকেল ক্যাম্প, জরুরি রক্তদান নেটওয়ার্ক এবং গ্রামীণ ডায়াবেটিস ও চক্ষু স্ক্রিনিং।',
       color: 'bg-emerald-50 text-emerald-600'
     },
     {
+      slug: 'education',
       title: 'আইসিটি ও প্রযুক্তি (IT & ICT)',
       icon: Laptop,
       desc: 'ঝালকাঠির তরুণ প্রজন্মকে দক্ষ জনশক্তিতে রূপান্তরে ফ্রিল্যান্সিং, ওয়েব ডিজাইন ও ডিজিটাল সাক্ষরতা কর্মশালা।',
       color: 'bg-blue-50 text-blue-600'
     },
     {
+      slug: 'sports',
       title: 'খেলাধুলা ও যুবশক্তি (Sports)',
       icon: Trophy,
       desc: 'মাদক ও ডিজিটাল আসক্তি মুক্ত সমাজ গঠনে তৃণমূল ক্রিকেট, ফুটবল টুর্নামেন্ট ও যুব অ্যাথলেটিক্স আয়োজন।',
       color: 'bg-amber-50 text-[#A6772A]'
     },
     {
+      slug: 'culture',
       title: 'সংস্কৃতি ও ঐতিহ্য (Culture & Heritage)',
       icon: Landmark,
       desc: 'বাঙালি সংস্কৃতি, ভাষা আন্দোলন ও মুক্তিযুদ্ধের সঠিক ইতিহাস সংরক্ষণ ও সাহিত্য সম্মেলনের আয়োজন।',
       color: 'bg-purple-50 text-purple-600'
     },
     {
-      title: 'পরিবেশ ও জলবায়ু (Environment)',
+      slug: 'heritage',
+      title: 'ঐতিহ্য সংরক্ষণ (Heritage)',
       icon: TreePine,
-      desc: 'সুগন্ধা নদী তীরবর্তী এলাকায় ব্যাপক বৃক্ষরোপণ, প্লাস্টিক দূষণ নিয়ন্ত্রণ ও পরিবেশবান্ধব সবুজ মডেল গ্রাম গঠন।',
+      desc: 'সুগন্ধা নদী তীরবর্তী এলাকায় ঐতিহাসিক নিদর্শন সংরক্ষণ, বৃক্ষরোপণ ও পরিবেশবান্ধব সবুজ ঐতিহ্য বিনির্মাণ।',
       color: 'bg-teal-50 text-teal-600'
     }
   ];
@@ -437,29 +446,49 @@ export default function HomePage() {
                 সমগ্র ঝালকাঠি জেলায় তৃণমূল পর্যায়ে বাস্তবমুখী সমাজকল্যাণ উদ্যোগ
               </p>
             </div>
-            <Link
-              href="/register?role=volunteer"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B62A35] hover:underline"
-            >
-              <span>Join as a volunteer in these areas</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href="/wings"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:border-[#B62A35]/30 hover:text-[#B62A35] px-3.5 py-2 rounded-full shadow-xs transition-all"
+              >
+                <span>Browse All Wings</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+              <Link
+                href="/register?role=volunteer"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B62A35] hover:underline"
+              >
+                <span>Join as a volunteer</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {focusAreas.map((area) => {
               const Icon = area.icon;
               return (
-                <div
+                <Link
                   key={area.title}
-                  className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs hover:shadow-md transition-shadow space-y-3"
+                  href={`/wings/${area.slug || 'education'}`}
+                  className="group bg-white p-6 rounded-3xl border border-slate-200 shadow-xs hover:shadow-md hover:border-[#B62A35]/30 transition-all flex flex-col justify-between space-y-4"
                 >
-                  <div className={`w-12 h-12 rounded-2xl ${area.color} flex items-center justify-center`}>
-                    <Icon className="w-6 h-6" />
+                  <div className="space-y-3">
+                    <div className={`w-12 h-12 rounded-2xl ${area.color} flex items-center justify-center group-hover:scale-105 transition-transform`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#B62A35] transition-colors">
+                      {area.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                      {area.desc}
+                    </p>
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900">{area.title}</h3>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">{area.desc}</p>
-                </div>
+                  <div className="pt-2 flex items-center text-xs font-bold text-[#B62A35] group-hover:translate-x-1 transition-transform">
+                    <span>Explore Wing Details</span>
+                    <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                  </div>
+                </Link>
               );
             })}
           </div>
