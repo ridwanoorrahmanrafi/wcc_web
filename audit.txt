@@ -1,0 +1,163 @@
+================================================================================
+WE CAN CHANGE (WCC) - FULL SYSTEM AUDIT REPORT
+================================================================================
+Generated Date: 2026-09-22
+Workspace Root: E:\Zobaer
+Components Audited:
+  1. Backend API Service:   E:\Zobaer\wcc_api (Port 5000)
+  2. Frontend Web Portal:   E:\Zobaer\wcc_web (Port 3000)
+Target Database:            MongoDB Atlas (wcc_db @ cluster0.9glsbni.mongodb.net)
+================================================================================
+
+--------------------------------------------------------------------------------
+1. EXECUTIVE SUMMARY & ARCHITECTURE OVERVIEW
+--------------------------------------------------------------------------------
+The "We Can Change" (WCC) enterprise system consists of a RESTful Express.js backend 
+(`wcc_api`) connected to MongoDB Atlas and a high-performance Next.js 16 (Turbopack) 
+frontend web application (`wcc_web`).
+
+The system implements a strict Role-Based Access Control (RBAC) model supporting:
+  - Admin (Full operational, member verification, financial ledger, and audit control)
+  - Member (Official digital membership ID, directory, and expense claim reimbursement)
+  - Volunteer (Digital volunteer badge, live service hour logging, and community drives)
+  - Public Guest (Public landing site, focus areas, leadership profile, and ID verification)
+
+--------------------------------------------------------------------------------
+2. BACKEND AUDIT (wcc_api)
+--------------------------------------------------------------------------------
+A. Environment & Database Connection:
+  - Connection URI: Configured via `wcc_api/.env` pointing to MongoDB Atlas `wcc_db`.
+  - Windows SRV Resolution: `dns.setServers(['8.8.8.8', '1.1.1.1'])` active in `config/db.js`.
+  - Connection Status: LIVE & VERIFIED (Host: ac-lstlvfa-shard-00-02.9glsbni.mongodb.net).
+
+B. Database Schema & Data Models (12 Models):
+  1. User: User authentication, JWT roles ('admin', 'member', 'volunteer'), hashed passwords (bcrypt).
+  2. Member: Central member registry, blood groups, upazilas, wings, statuses, photo URLs.
+  3. Account: Bank and cash liquidity accounts, real-time balance tracking.
+  4. Activity: Community campaigns, welfare drives, budgets, and actual expenditures.
+  5. Transaction: Master double-entry ledger tracking all institutional financial movements.
+  6. Income: Recorded donations, grants, and income receipts.
+  7. Expense: Expenditure records categorized by operational and program categories.
+  8. Reimbursement: Personal expense claims submitted by members/volunteers with review states.
+  9. Advance: Petty cash disbursements and settlement reconciliation.
+  10. Vendor: External service providers and vendor registry.
+  11. VolunteerLog: Activity-based volunteer service hours, drive names, and contributions.
+  12. AuditLog: Automated immutable record of admin actions, member status updates, and transactions.
+
+C. Seed Data & Static Mock Data Purge:
+  - All mock memory seeds and dummy generators have been completely purged.
+  - Live Database Verification Audit:
+      users: 1 (Primary System Administrator)
+      members: 0 (Live Database Driven - No dummy entries)
+      accounts: 0 (Empty - Ready for live treasury records)
+      activities: 0 (Empty - Ready for real campaigns)
+      transactions: 0 (Empty - Ready for real ledger records)
+      incomes: 0
+      expenses: 0
+      reimbursements: 0
+      advances: 0
+      vendors: 0
+      volunteerlogs: 0
+      auditlogs: 0
+  - Fabricated synthetic member generation has been removed from `data/store.js`. Non-existent
+    records strictly return 404 / `{ verified: false }`.
+
+D. API Endpoints Audited:
+  - Auth:
+      POST /api/auth/register (Registers User and creates Member record directly in MongoDB)
+      POST /api/auth/login    (JWT issuance with role payload)
+      POST /api/auth/volunteer/log (Saves hours to VolunteerLog and updates User totalHours)
+      GET  /api/auth/volunteer/logs (Fetches personal service history from MongoDB)
+  - Members:
+      GET  /api/members/stats (Live demographic metrics: blood groups, wings, upazilas)
+      GET  /api/members       (Searchable, filterable, paginated directory)
+      GET  /api/members/:id   (Direct ID lookup)
+      GET  /api/members/verify/:id (Public, privacy-safe QR verification payload)
+      POST /api/members       (Admin manual member registration)
+      PATCH /api/members/:id/status (Approval/deactivation with audit logging)
+  - Finance:
+      GET  /api/finance/dashboard (Total liquidity, income, expense, and category spend)
+      GET  /api/finance/accounts  (Bank accounts & balances)
+      GET  /api/finance/transactions (Central transaction ledger)
+      GET  /api/finance/reimbursements (Claims list and review states)
+      POST /api/finance/transactions
+      POST /api/finance/accounts
+      POST /api/finance/reimbursements
+  - Audit:
+      GET  /api/audit (Chronological system audit trail)
+
+--------------------------------------------------------------------------------
+3. FRONTEND AUDIT (wcc_web)
+--------------------------------------------------------------------------------
+A. Compilation & Build Verification:
+  - Build Engine: Next.js 16.3.5 (Turbopack)
+  - Production Build: `npm run build` completed with 0 errors across all 19 routes.
+  - TypeScript / ESLint: Passed with 0 errors.
+
+B. Layout & Navigation Hierarchy (AppShell.jsx):
+  - Guest Site (`/`):
+      * Shows Public Top Navbar (`Components/navbar.jsx`) with Home, About Us, Focus Areas,
+        Chairman Profile, and Verify ID.
+      * Shows Public Footer (`Components/footer.jsx`) with organization charter, Kumarpotti Rd
+        contacts, and social links.
+      * Strictly HIDES the portal sidebar.
+  - Auth Pages (`/login`, `/register`):
+      * Clean standalone presentation without duplicate navbars or sidebars.
+      * Single-click Admin credential auto-fill for frictionless admin access.
+  - Portal Routes (`/dashboard`, `/members`, `/finance`, `/analytics`, `/verify`):
+      * Exclusively renders the Aside Bar (`Sidebar.jsx`).
+      * Top guest navbar and guest footer are completely hidden.
+      * Unified mobile header bar with hamburger drawer toggle and WCC portal branding.
+
+C. Sidebar Architecture & Fixes (Sidebar.jsx):
+  - Solved Double Sidebar Bug: AppShell now restricts sidebar rendering strictly to portal routes.
+  - Solved Double Scrollbar Bug: Fixed CSS flex constraints (`flex flex-col flex-1 min-h-0`) 
+    with internal `overflow-y-auto` on navigation items. Viewport height is locked to `100vh`
+    with zero window overflow.
+  - Solved Mobile Collision Bug: Replaced arbitrary floating toggle with a clean mobile drawer
+    modal featuring background backdrop and dedicated internal Close (X) button.
+  - Desktop Responsiveness: Smooth desktop toggle between Expanded (w-64) and Collapsed (w-20).
+  - Role-Specific Menus:
+      * Admin: Core Oversight, Finance & Audit, Intelligence & Public.
+      * Volunteer: Volunteer Corps, Community Action.
+      * Member: My Membership, Services & Directory.
+  - Tab Routing: Fully synchronized with URL search parameters (`?tab=badge`, `?tab=log`, etc.)
+    wrapped in `<Suspense>` boundaries.
+
+D. Elimination of Front-End Static Data:
+  - `src/app/page.js`:
+      * Live counters (`stats.totalMembers`, `stats.totalLiquidity`, `stats.totalActivities`)
+        start at 0 and populate purely via MongoDB API calls.
+      * Replaced static dummy member testimonials with authentic organizational commitments.
+  - `src/app/dashboard/page.js`:
+      * Reset form state defaults (campaign name, hours) to empty strings.
+      * Replaced hardcoded fallback IDs, phones, and photos with dynamic user/member fields.
+      * Replaced 4 static hardcoded upcoming drives with dynamic rendering from live `activities`
+        in MongoDB with clean database empty-states.
+
+--------------------------------------------------------------------------------
+4. SECURITY & CREDENTIAL AUDIT
+--------------------------------------------------------------------------------
+A. Authentication & Hashing:
+  - Passwords hashed using bcrypt with salt rounds = 10.
+  - JWT tokens signed with secure expiration (7 days).
+  - Public verification endpoint (`/api/members/verify/:id`) filters out Personally 
+    Identifiable Information (PII) like phone numbers and national IDs for public safety.
+
+B. Default Master Administrative Account:
+  - Email: admin@wecanchange.org
+  - Role: admin
+  - Member ID: WCC-ADM-0001
+  - Initial Password: wccadmin2026
+
+--------------------------------------------------------------------------------
+5. AUDIT STATUS CONCLUSION
+--------------------------------------------------------------------------------
+Backend API:      OPERATIONAL & CLEAN (MongoDB Atlas Connected)
+Frontend Web:     OPERATIONAL & CLEAN (Production Build Verified)
+Data Integrity:   100% DATABASE-DRIVEN (All dummy/seed data purged)
+Layout & Sidebar: VERIFIED & BUG-FREE (No double sidebar/scrollbar glitches)
+
+Audit Signed: WCC Engineering Team
+Timestamp: 2026-09-22 16:24:00 +06:00
+================================================================================

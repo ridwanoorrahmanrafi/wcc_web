@@ -1,26 +1,74 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --primary: #B62A35;
+  --primary-hover: #9E1F2A;
+  --primary-light: #FDF2F3;
+  --accent: #F1AD1A;
+  --accent-hover: #D9980F;
+  --accent-light: #FEF8EC;
+  --navy: #1D3557;
+  --navy-light: #457B9D;
+  --success: #169053;
+  --success-light: #F0FAF4;
+  --bg-page: #F8FAFC;
+  --bg-surface: #FFFFFF;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-page);
+  color: #1E293B;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hind Siliguri", sans-serif;
+}
+
+/* Custom Utilities */
+.wcc-gradient {
+  background: linear-gradient(135deg, #B62A35 0%, #1D3557 100%);
+}
+
+.wcc-gold-gradient {
+  background: linear-gradient(135deg, #F1AD1A 0%, #B62A35 100%);
+}
+
+.gold-border {
+  border-color: #F1AD1A;
+}
+
+.badge-active {
+  background-color: #DEF7EC;
+  color: #03543F;
+  border: 1px solid #BCF0DA;
+}
+
+.badge-pending {
+  background-color: #FEF08A;
+  color: #854D0E;
+  border: 1px solid #FDE047;
+}
+
+.badge-inactive {
+  background-color: #F3F4F6;
+  color: #374151;
+  border: 1px solid #E5E7EB;
+}
+
+/* Print styles for Member ID card and reports */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .printable-card, .printable-card * {
+    visibility: visible;
+  }
+  .printable-card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  nav, footer, .no-print {
+    display: none !important;
+  }
 }
