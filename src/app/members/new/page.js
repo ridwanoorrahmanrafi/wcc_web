@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, UserPlus, CheckCircle2, AlertCircle } from 'lucide-react';
@@ -10,6 +10,23 @@ export default function NewMemberPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [wings, setWings] = useState([]);
+
+  useEffect(() => {
+    async function loadWings() {
+      try {
+        const data = await api.getWings();
+        if (Array.isArray(data) && data.length > 0) {
+          const names = data.map((w) => w.nameBn);
+          setWings(names);
+          setFormData((prev) => ({ ...prev, wing: names[0] || 'শিক্ষা উইং' }));
+        }
+      } catch (err) {
+        console.error('Failed to load wings for new member:', err);
+      }
+    }
+    loadWings();
+  }, []);
 
   const [formData, setFormData] = useState({
     nameBn: '',
@@ -67,15 +84,6 @@ export default function NewMemberPage() {
     }
   };
 
-  const wings = [
-    'শিক্ষা উইং',
-    'স্বাস্থ্য উইং',
-    'সমাজকল্যাণ উইং',
-    'পরিবেশ উইং',
-    'আইসিটি উইং',
-    'সংস্কৃতি উইং',
-    'অর্থ ও পরিকল্পনা উইং'
-  ];
 
   const upazilas = ['ঝালকাঠি সদর', 'নলছিটি', 'রাজাপুর', 'কাঠালিয়া'];
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];

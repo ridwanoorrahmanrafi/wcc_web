@@ -17,6 +17,16 @@ export default function WingsPublicPage() {
   const [wings, setWings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('wcc_user');
+      if (stored) setUser(JSON.parse(stored));
+    } catch (e) {
+      setUser(null);
+    }
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -247,17 +257,26 @@ export default function WingsPublicPage() {
           </div>
           <div className="flex flex-wrap gap-3">
             <Link
-              href="/register?role=volunteer"
+              href={user ? '/dashboard?tab=requests' : '/register'}
               className="px-6 py-3 bg-[#B62A35] hover:bg-[#9E1F2A] text-white font-bold text-xs rounded-xl shadow-lg transition-all"
             >
-              Become a Wing Volunteer
+              {user ? 'Request Wing / Volunteer Assignment' : 'Join as Member'}
             </Link>
-            <Link
-              href="/login"
-              className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs rounded-xl transition-all"
-            >
-              Sign In to Member Portal
-            </Link>
+            {!user ? (
+              <Link
+                href="/login"
+                className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs rounded-xl transition-all"
+              >
+                Sign In to Member Portal
+              </Link>
+            ) : (
+              <Link
+                href="/dashboard"
+                className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs rounded-xl transition-all"
+              >
+                Go to My Dashboard
+              </Link>
+            )}
           </div>
         </div>
       </section>

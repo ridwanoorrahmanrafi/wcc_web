@@ -48,7 +48,6 @@ export default function HomePage() {
 
   // Hero Carousel State
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [quickVerifyId, setQuickVerifyId] = useState('');
   const [user, setUser] = useState(null);
 
   // Live Stats from MongoDB
@@ -70,14 +69,17 @@ export default function HomePage() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Fetch Live Stats from Backend wcc_api
+  const [wings, setWings] = useState([]);
+
+  // Live Stats & Wings from MongoDB via wcc_api
   useEffect(() => {
-    async function fetchStats() {
+    async function fetchData() {
       try {
-        const [memStats, finDash, acts] = await Promise.all([
+        const [memStats, finDash, acts, wingsData] = await Promise.all([
           api.getMemberStats().catch(() => ({ total: 0, active: 0 })),
           api.getFinanceDashboard().catch(() => ({ totalLiquidity: 0 })),
-          api.getActivities().catch(() => [])
+          api.getActivities().catch(() => []),
+          api.getWings().catch(() => [])
         ]);
 
         setStats({
@@ -86,11 +88,12 @@ export default function HomePage() {
           totalLiquidity: finDash.totalLiquidity || 0,
           totalActivities: Array.isArray(acts) ? acts.length : 0
         });
+        setWings(Array.isArray(wingsData) ? wingsData : []);
       } catch (err) {
-        console.error('Stats loading error:', err);
+        console.error('Data loading error:', err);
       }
     }
-    fetchStats();
+    fetchData();
   }, []);
 
   // Hero auto-slider timer
@@ -109,56 +112,22 @@ export default function HomePage() {
     setCurrentSlide((prev) => (prev + 1) % heroImages.length);
   };
 
-  const handleQuickVerify = (e) => {
-    e.preventDefault();
-    if (!quickVerifyId.trim()) return;
-    router.push(`/verify?id=${encodeURIComponent(quickVerifyId.trim())}`);
-  };
-
-  const focusAreas = [
-    {
-      slug: 'education',
-      title: 'শিক্ষা (Education)',
-      icon: BookOpen,
-      desc: 'মেধাবী ও অসচ্ছল শিক্ষার্থীদের শিক্ষাবৃত্তি, বিনামূল্যে শিক্ষা উপকরণ বিতরণ ও উচ্চশিক্ষা ক্যারিয়ার গাইডেন্স।',
-      color: 'bg-rose-50 text-[#B62A35]'
-    },
-    {
-      slug: 'health',
-      title: 'স্বাস্থ্যসেবা (Health Care)',
-      icon: Stethoscope,
-      desc: 'বিনামূল্যে বিশেষজ্ঞ ডাক্তারদের মেডিকেল ক্যাম্প, জরুরি রক্তদান নেটওয়ার্ক এবং গ্রামীণ ডায়াবেটিস ও চক্ষু স্ক্রিনিং।',
-      color: 'bg-emerald-50 text-emerald-600'
-    },
-    {
-      slug: 'education',
-      title: 'আইসিটি ও প্রযুক্তি (IT & ICT)',
-      icon: Laptop,
-      desc: 'ঝালকাঠির তরুণ প্রজন্মকে দক্ষ জনশক্তিতে রূপান্তরে ফ্রিল্যান্সিং, ওয়েব ডিজাইন ও ডিজিটাল সাক্ষরতা কর্মশালা।',
-      color: 'bg-blue-50 text-blue-600'
-    },
-    {
-      slug: 'sports',
-      title: 'খেলাধুলা ও যুবশক্তি (Sports)',
-      icon: Trophy,
-      desc: 'মাদক ও ডিজিটাল আসক্তি মুক্ত সমাজ গঠনে তৃণমূল ক্রিকেট, ফুটবল টুর্নামেন্ট ও যুব অ্যাথলেটিক্স আয়োজন।',
-      color: 'bg-amber-50 text-[#A6772A]'
-    },
-    {
-      slug: 'culture',
-      title: 'সংস্কৃতি ও ঐতিহ্য (Culture & Heritage)',
-      icon: Landmark,
-      desc: 'বাঙালি সংস্কৃতি, ভাষা আন্দোলন ও মুক্তিযুদ্ধের সঠিক ইতিহাস সংরক্ষণ ও সাহিত্য সম্মেলনের আয়োজন।',
-      color: 'bg-purple-50 text-purple-600'
-    },
-    {
-      slug: 'heritage',
-      title: 'ঐতিহ্য সংরক্ষণ (Heritage)',
-      icon: TreePine,
-      desc: 'সুগন্ধা নদী তীরবর্তী এলাকায় ঐতিহাসিক নিদর্শন সংরক্ষণ, বৃক্ষরোপণ ও পরিবেশবান্ধব সবুজ ঐতিহ্য বিনির্মাণ।',
-      color: 'bg-teal-50 text-teal-600'
+  const getWingVisual = (slug) => {
+    switch (slug) {
+      case 'education':
+        return { icon: BookOpen, color: 'bg-rose-50 text-[#B62A35]' };
+      case 'health':
+        return { icon: Stethoscope, color: 'bg-emerald-50 text-emerald-600' };
+      case 'sports':
+        return { icon: Trophy, color: 'bg-amber-50 text-[#A6772A]' };
+      case 'culture':
+        return { icon: Landmark, color: 'bg-purple-50 text-purple-600' };
+      case 'heritage':
+        return { icon: TreePine, color: 'bg-teal-50 text-teal-600' };
+      default:
+        return { icon: Sparkles, color: 'bg-blue-50 text-blue-600' };
     }
-  ];
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -267,32 +236,6 @@ export default function HomePage() {
                   </>
                 )}
               </div>
-
-              {/* Public Member Verification Search Bar */}
-              <div className="pt-4 max-w-xl">
-                <p className="text-xs text-slate-300 mb-2 font-semibold flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Instant Public Member & Volunteer ID Verification:</span>
-                </p>
-                <form onSubmit={handleQuickVerify} className="flex items-center bg-white rounded-2xl shadow-xl p-1.5">
-                  <div className="pl-3 pr-2 text-slate-400">
-                    <Search className="w-5 h-5" />
-                  </div>
-                  <input
-                    type="text"
-                    value={quickVerifyId}
-                    onChange={(e) => setQuickVerifyId(e.target.value)}
-                    placeholder="Enter ID (e.g. WCC-2026-0001 or WCC-VOL-0001)..."
-                    className="w-full text-slate-900 text-sm font-medium focus:outline-hidden py-1.5 px-1"
-                  />
-                  <button
-                    type="submit"
-                    className="px-5 py-2.5 bg-[#B62A35] hover:bg-[#9E1F2A] text-white text-xs font-bold rounded-xl shrink-0 transition-colors shadow-xs"
-                  >
-                    Verify ID
-                  </button>
-                </form>
-              </div>
             </div>
 
             {/* Right Column: Hero Visual Card */}
@@ -312,15 +255,10 @@ export default function HomePage() {
                 <p className="text-xs text-slate-200 leading-relaxed">
                   ঝালকাঠি সদর, নলছিটি, রাজাপুর ও কাঠালিয়াসহ সমগ্র বাংলাদেশের তরুণদের একত্রিত করে জনকল্যাণ ও সুশাসনের শক্ত ভিত গড়ে তোলাই আমাদের লক্ষ্য।
                 </p>
-                <div className="pt-3 border-t border-white/15 flex items-center justify-around text-center">
+                <div className="pt-3 border-t border-white/15 flex items-center justify-center text-center">
                   <div>
                     <div className="text-xl font-black text-[#F1AD1A]">2026</div>
                     <div className="text-[10px] text-slate-300 uppercase font-semibold">Charter Year</div>
-                  </div>
-                  <div className="w-px h-8 bg-white/20"></div>
-                  <div>
-                    <div className="text-xl font-black text-emerald-400">100%</div>
-                    <div className="text-[10px] text-slate-300 uppercase font-semibold">Transparent</div>
                   </div>
                 </div>
               </div>
@@ -455,7 +393,7 @@ export default function HomePage() {
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
               <Link
-                href="/register?role=volunteer"
+                href="/register"
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B62A35] hover:underline"
               >
                 <span>Join as a volunteer</span>
@@ -465,23 +403,24 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {focusAreas.map((area) => {
-              const Icon = area.icon;
+            {wings.map((wing) => {
+              const visual = getWingVisual(wing.slug);
+              const Icon = visual.icon;
               return (
                 <Link
-                  key={area.title}
-                  href={`/wings/${area.slug || 'education'}`}
+                  key={wing.slug}
+                  href={`/wings/${wing.slug}`}
                   className="group bg-white p-6 rounded-3xl border border-slate-200 shadow-xs hover:shadow-md hover:border-[#B62A35]/30 transition-all flex flex-col justify-between space-y-4"
                 >
                   <div className="space-y-3">
-                    <div className={`w-12 h-12 rounded-2xl ${area.color} flex items-center justify-center group-hover:scale-105 transition-transform`}>
+                    <div className={`w-12 h-12 rounded-2xl ${visual.color} flex items-center justify-center group-hover:scale-105 transition-transform`}>
                       <Icon className="w-6 h-6" />
                     </div>
                     <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#B62A35] transition-colors">
-                      {area.title}
+                      {wing.nameBn} ({wing.nameEn})
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                      {area.desc}
+                      {wing.description}
                     </p>
                   </div>
                   <div className="pt-2 flex items-center text-xs font-bold text-[#B62A35] group-hover:translate-x-1 transition-transform">
@@ -541,7 +480,7 @@ export default function HomePage() {
 
               <div className="pt-2 flex flex-wrap gap-3">
                 <Link
-                  href="/register?role=member"
+                  href="/register"
                   className="px-5 py-2.5 bg-[#F1AD1A] hover:bg-[#D9980F] text-slate-950 font-bold rounded-xl text-xs transition-colors shadow-xs"
                 >
                   Join Under WCC Leadership

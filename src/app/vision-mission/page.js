@@ -267,16 +267,16 @@ export default function VisionMissionPage() {
           </div>
           <div className="flex flex-wrap gap-3">
             <Link
-              href="/register?role=volunteer"
+              href="/register"
               className="px-5 py-2.5 bg-[#B62A35] hover:bg-[#9E1F2A] text-white text-xs font-bold rounded-xl transition-all shadow-xs"
             >
-              Join as Volunteer
+              Join We Can Change
             </Link>
             <Link
-              href="/register?role=member"
+              href="/login"
               className="px-5 py-2.5 bg-white border border-slate-200 text-slate-800 text-xs font-bold rounded-xl hover:bg-slate-50 transition-all shadow-xs"
             >
-              Apply for Membership
+              Member Sign In
             </Link>
           </div>
         </div>

@@ -118,7 +118,7 @@ export default function Footer() {
             <ul className="space-y-2.5 text-sm">
               <li>
                 <Link href="/login" className="hover:text-white transition-colors flex items-center gap-1 text-[#F1AD1A] font-semibold">
-                  <span>Join WCC / Sign In</span>
+                  <span>Sign In / Join WCC</span>
                   <ArrowUpRight className="w-3 h-3 text-slate-400" />
                 </Link>
               </li>

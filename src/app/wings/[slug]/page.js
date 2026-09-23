@@ -30,6 +30,16 @@ export default function WingDetailPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('wcc_user');
+      if (stored) setUser(JSON.parse(stored));
+    } catch (e) {
+      setUser(null);
+    }
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -278,11 +288,11 @@ export default function WingDetailPage({ params }) {
 
               <div className="pt-2 flex flex-wrap items-center gap-3">
                 <Link
-                  href="/register?role=volunteer"
+                  href={user ? '/dashboard?tab=requests' : '/register'}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-[#B62A35] hover:bg-[#9E1F2A] text-white font-bold text-xs rounded-xl shadow-lg transition-all"
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span>Join this Wing as Volunteer</span>
+                  <span>{user ? 'Request to Join this Wing' : 'Join as Member'}</span>
                 </Link>
                 <Link
                   href="/wings"

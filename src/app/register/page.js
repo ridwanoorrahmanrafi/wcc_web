@@ -26,8 +26,6 @@ function RegisterForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
-  const [accountType, setAccountType] = useState('member'); // 'member' | 'volunteer'
-  const [wing, setWing] = useState('সাধারণ উইং');
   const [upazila, setUpazila] = useState('ঝালকাঠি সদর');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -43,16 +41,16 @@ function RegisterForm() {
         name,
         email,
         password,
-        role: accountType === 'volunteer' ? 'volunteer' : 'member',
+        role: 'member',
         phone,
-        volunteerWing: wing,
+        volunteerWing: 'সাধারণ উইং',
         volunteerInterests: []
       });
 
       if (res.token) {
         localStorage.setItem('wcc_token', res.token);
         localStorage.setItem('wcc_user', JSON.stringify(res.user));
-        alert(`Congratulations! You have successfully registered as a ${accountType === 'volunteer' ? 'Volunteer' : 'Member'} with WCC! Your digital ID has been generated.`);
+        alert('Congratulations! You have successfully registered as an Official Member with WCC! Your digital ID has been generated.');
         router.push('/dashboard');
       }
     } catch (err) {
@@ -134,76 +132,7 @@ function RegisterForm() {
             </div>
           )}
 
-          {/* Quick Sign up with Google */}
-          <div className="space-y-3">
-            <button
-              type="button"
-              onClick={handleGoogleAuth}
-              disabled={googleLoading || loading}
-              className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-xl border border-slate-300 shadow-2xs transition-colors flex items-center justify-center gap-3 text-xs disabled:opacity-50 cursor-pointer"
-            >
-              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                />
-              </svg>
-              <span>{googleLoading ? 'Connecting to Google...' : 'Sign up with Google'}</span>
-            </button>
-
-            <div className="relative flex py-1 items-center">
-              <div className="grow border-t border-slate-200"></div>
-              <span className="shrink mx-3 text-slate-400 text-[11px] uppercase font-bold tracking-wider">
-                Or register with email
-              </span>
-              <div className="grow border-t border-slate-200"></div>
-            </div>
-          </div>
-
           <form onSubmit={handleRegister} className="space-y-4 text-xs">
-            {/* Account Type Selector */}
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1.5">I want to register as</label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setAccountType('member')}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                    accountType === 'member'
-                      ? 'bg-rose-50 border-[#B62A35] text-[#B62A35] shadow-xs'
-                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  <Users className="w-3.5 h-3.5" />
-                  <span>General Member</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAccountType('volunteer')}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                    accountType === 'volunteer'
-                      ? 'bg-amber-50 border-[#F1AD1A] text-amber-900 shadow-xs'
-                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-[#F1AD1A]" />
-                  <span>Volunteer Applicant</span>
-                </button>
-              </div>
-            </div>
-
             <div>
               <label className="block font-semibold text-slate-700 mb-1">Full Name (সম্পূর্ণ নাম)</label>
               <input
@@ -284,7 +213,7 @@ function RegisterForm() {
             <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 flex items-start gap-2">
               <Sparkles className="w-4 h-4 text-[#F1AD1A] shrink-0 mt-0.5" />
               <span>
-                <strong>Wing & Volunteer Selection:</strong> You are registered as a General Member. You can request your preferred wing (Education, Health, ICT, Environment, etc.) or apply to become a volunteer from your dashboard after signing in.
+                <strong>Official Membership ID:</strong> Upon registration, your official WCC Digital ID card is immediately provisioned. You can request wing assignments or volunteer roles from your portal dashboard.
               </span>
             </div>
 
@@ -297,6 +226,44 @@ function RegisterForm() {
               <span>{loading ? 'Generating Membership ID...' : 'Complete Registration & Get ID'}</span>
             </button>
           </form>
+
+          {/* Quick Sign up with Google Option Under Complete Registration Button */}
+          <div className="space-y-3 pt-1">
+            <div className="relative flex py-1 items-center">
+              <div className="grow border-t border-slate-200"></div>
+              <span className="shrink mx-3 text-slate-400 text-[11px] uppercase font-bold tracking-wider">
+                Or continue with
+              </span>
+              <div className="grow border-t border-slate-200"></div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGoogleAuth}
+              disabled={googleLoading || loading}
+              className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-xl border border-slate-300 shadow-2xs transition-colors flex items-center justify-center gap-3 text-xs disabled:opacity-50 cursor-pointer"
+            >
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                />
+              </svg>
+              <span>{googleLoading ? 'Connecting to Google...' : 'Sign up with Google'}</span>
+            </button>
+          </div>
 
           <div className="pt-2 text-center text-xs text-slate-500 border-t border-slate-100 space-y-2">
             <div>

@@ -50,8 +50,27 @@ export default function AppShell({ children }) {
     pathname === '/programs' ||
     pathname.startsWith('/events') ||
     pathname === '/report-issue';
-  const isAuthPage = pathname === '/login' || pathname === '/register';
+  const isAuthPage =
+    pathname === '/login' ||
+    pathname === '/register' ||
+    pathname.startsWith('/forgot-password') ||
+    pathname.startsWith('/reset-password');
   const isPublicVerify = pathname === '/verify' && !user;
+
+  const getRoleBadge = (role) => {
+    switch (role) {
+      case 'admin':
+        return { text: 'Admin', color: 'bg-rose-500/20 text-rose-300 border-rose-500/30' };
+      case 'coordinator':
+        return { text: 'Coordinator', color: 'bg-purple-500/20 text-purple-300 border-purple-500/30' };
+      case 'volunteer':
+        return { text: 'Volunteer', color: 'bg-amber-500/20 text-[#F1AD1A] border-amber-500/30' };
+      case 'finance_officer':
+        return { text: 'Finance', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' };
+      default:
+        return { text: 'Member', color: 'bg-blue-500/20 text-blue-300 border-blue-500/30' };
+    }
+  };
 
   // 1. GUEST / PUBLIC SITE: Render top Navbar & public Footer (NO Sidebar!)
   if (isGuestSite || isPublicVerify) {
@@ -66,7 +85,7 @@ export default function AppShell({ children }) {
     );
   }
 
-  // 2. AUTH PAGES (Login & Register): Clean standalone interface (NO Sidebar!)
+  // 2. AUTH PAGES (Login, Register, Forgot Password, Reset Password): Clean standalone interface (NO Sidebar!)
   if (isAuthPage) {
     return (
       <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
@@ -144,7 +163,7 @@ export default function AppShell({ children }) {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileOpen(true)}
-              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 focus:outline-hidden transition-colors"
+              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 focus:outline-hidden transition-colors cursor-pointer"
               aria-label="Open Navigation Menu"
             >
               <Menu className="w-5 h-5 text-[#F1AD1A]" />
@@ -158,8 +177,8 @@ export default function AppShell({ children }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded bg-[#F1AD1A]/20 text-[#F1AD1A] border border-[#F1AD1A]/30">
-              {user.role}
+            <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded border ${getRoleBadge(user.role).color}`}>
+              {getRoleBadge(user.role).text}
             </span>
             <Link
               href="/"

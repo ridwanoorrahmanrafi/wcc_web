@@ -16,12 +16,18 @@ import {
   Eye,
   CheckCircle2,
   Clock,
-  ShieldCheck
+  ShieldCheck,
+  Send,
+  X,
+  Sparkles,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import StatusBadge from '@/Components/StatusBadge';
 
 export default function MembersPage() {
+  const [currentUser, setCurrentUser] = useState(null);
   const [members, setMembers] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -35,16 +41,84 @@ export default function MembersPage() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'cards'
 
-  const wings = [
-    'All',
-    'শিক্ষা উইং',
-    'স্বাস্থ্য উইং',
-    'সমাজকল্যাণ উইং',
-    'পরিবেশ উইং',
-    'আইসিটি উইং',
-    'সংস্কৃতি উইং',
-    'অর্থ ও পরিকল্পনা উইং'
-  ];
+  const [wings, setWings] = useState(['All']);
+  const [fullWings, setFullWings] = useState([]);
+
+  // Appoint Role State
+  const [appointModalOpen, setAppointModalOpen] = useState(false);
+  const [selectedMemberForAppoint, setSelectedMemberForAppoint] = useState(null);
+  const [appointRole, setAppointRole] = useState('volunteer');
+  const [appointWing, setAppointWing] = useState('');
+  const [appointNote, setAppointNote] = useState('');
+  const [appointing, setAppointing] = useState(false);
+  const [feedback, setFeedback] = useState({ type: '', message: '' });
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('wcc_user');
+      if (stored) setCurrentUser(JSON.parse(stored));
+    } catch {
+      setCurrentUser(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    async function loadWings() {
+      try {
+        const data = await api.getWings();
+        if (Array.isArray(data) && data.length > 0) {
+          setFullWings(data);
+          setWings(['All', ...data.map(w => w.nameBn)]);
+        }
+      } catch (err) {
+        console.error('Failed to load wings for filter:', err);
+      }
+    }
+    loadWings();
+  }, []);
+
+  const handleOpenAppointModal = (member) => {
+    setSelectedMemberForAppoint(member);
+    setAppointRole('volunteer');
+    setAppointWing(fullWings[0]?.nameBn || member.wing || 'সাধারণ উইং');
+    setAppointNote('');
+    setAppointModalOpen(true);
+  };
+
+  const handleSubmitAppoint = async (e) => {
+    e.preventDefault();
+    if (!selectedMemberForAppoint) return;
+    setAppointing(true);
+    setFeedback({ type: '', message: '' });
+    try {
+      const targetWingObj = fullWings.find(
+        w => w.nameBn === appointWing || w.nameEn === appointWing || w.slug === appointWing
+      );
+      await api.sendRoleInvitation({
+        recipientMemberId: selectedMemberForAppoint.memberId,
+        recipientEmail: selectedMemberForAppoint.email,
+        recipientName: selectedMemberForAppoint.nameEn || selectedMemberForAppoint.nameBn,
+        targetRole: appointRole,
+        targetWing: targetWingObj ? `${targetWingObj.nameBn} (${targetWingObj.nameEn})` : appointWing,
+        targetWingId: targetWingObj ? targetWingObj._id : '',
+        note: appointNote
+      });
+      setFeedback({
+        type: 'success',
+        message: `Role invitation sent to ${selectedMemberForAppoint.nameEn}! A notification has been placed on their dashboard to accept or decline.`
+      });
+      setAppointModalOpen(false);
+      setSelectedMemberForAppoint(null);
+      setTimeout(() => setFeedback({ type: '', message: '' }), 6000);
+    } catch (err) {
+      setFeedback({
+        type: 'error',
+        message: err.message || 'Failed to send role invitation.'
+      });
+    } finally {
+      setAppointing(false);
+    }
+  };
 
   const bloodGroups = ['All', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
@@ -149,6 +223,29 @@ export default function MembersPage() {
           </Link>
         </div>
       </div>
+
+      {/* Feedback Banner */}
+      {feedback.message && (
+        <div
+          className={`p-3.5 rounded-xl border flex items-center justify-between text-xs font-semibold ${
+            feedback.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-rose-50 border-rose-200 text-rose-800'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {feedback.type === 'success' ? (
+              <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            )}
+            <span>{feedback.message}</span>
+          </div>
+          <button onClick={() => setFeedback({ type: '', message: '' })} className="hover:opacity-75">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Filter and Search Bar */}
       <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-3">
@@ -350,13 +447,25 @@ export default function MembersPage() {
                     </td>
 
                     <td className="py-3 px-4 text-right">
-                      <Link
-                        href={`/members/${member.memberId}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 hover:bg-[#B62A35] hover:text-white text-slate-700 font-semibold text-[11px] transition-colors"
-                      >
-                        <Eye className="w-3 h-3" />
-                        <span>View</span>
-                      </Link>
+                      <div className="flex items-center justify-end gap-1.5">
+                        {currentUser?.role === 'admin' && (
+                          <button
+                            onClick={() => handleOpenAppointModal(member)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-800 border border-amber-200 font-bold text-[11px] transition-colors shadow-xs"
+                            title="Appoint as Volunteer or Wing Coordinator"
+                          >
+                            <ShieldCheck className="w-3 h-3 text-amber-600 group-hover:text-white" />
+                            <span>Appoint</span>
+                          </button>
+                        )}
+                        <Link
+                          href={`/members/${member.memberId}`}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 hover:bg-[#B62A35] hover:text-white text-slate-700 font-semibold text-[11px] transition-colors"
+                        >
+                          <Eye className="w-3 h-3" />
+                          <span>View</span>
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -420,16 +529,175 @@ export default function MembersPage() {
                 <div className="text-[11px] font-mono text-slate-500">
                   {member.mobile}
                 </div>
-                <Link
-                  href={`/members/${member.memberId}`}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-[#B62A35] hover:underline"
-                >
-                  <span>Profile & ID Card</span>
-                  <Eye className="w-3.5 h-3.5" />
-                </Link>
+                <div className="flex items-center gap-2">
+                  {currentUser?.role === 'admin' && (
+                    <button
+                      onClick={() => handleOpenAppointModal(member)}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 hover:bg-amber-600 hover:text-white text-amber-800 border border-amber-200 font-bold text-[11px] transition-colors shadow-xs"
+                      title="Appoint as Volunteer or Wing Coordinator"
+                    >
+                      <ShieldCheck className="w-3 h-3" />
+                      <span>Appoint</span>
+                    </button>
+                  )}
+                  <Link
+                    href={`/members/${member.memberId}`}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-[#B62A35] hover:underline"
+                  >
+                    <span>Profile & ID Card</span>
+                    <Eye className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Appoint Member Modal */}
+      {appointModalOpen && selectedMemberForAppoint && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+              <div>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800">
+                  Admin Action
+                </span>
+                <h3 className="text-lg font-black text-slate-900 mt-1">Appoint Member Role</h3>
+                <p className="text-xs text-slate-500">
+                  Send a formal role appointment to this member. A notification will appear on their dashboard to accept or decline.
+                </p>
+              </div>
+              <button
+                onClick={() => setAppointModalOpen(false)}
+                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Member Summary Card */}
+            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-200 bg-white shrink-0">
+                <img
+                  src={selectedMemberForAppoint.photoUrl || '/default-avatar.svg'}
+                  alt={selectedMemberForAppoint.nameEn}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = '/default-avatar.svg';
+                  }}
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="font-bold text-xs text-slate-900 truncate">
+                  {selectedMemberForAppoint.nameEn} ({selectedMemberForAppoint.nameBn})
+                </div>
+                <div className="text-[11px] text-slate-500 flex items-center gap-2">
+                  <span className="font-mono font-semibold">{selectedMemberForAppoint.memberId}</span>
+                  <span>•</span>
+                  <span>{selectedMemberForAppoint.email || selectedMemberForAppoint.mobile}</span>
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmitAppoint} className="space-y-4">
+              {/* Role Selection */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  Select Target Role
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setAppointRole('volunteer')}
+                    className={`p-3 rounded-xl border text-left transition-all ${
+                      appointRole === 'volunteer'
+                        ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-500/20'
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-black text-xs text-slate-900">Volunteer Corps</span>
+                      {appointRole === 'volunteer' && <CheckCircle className="w-4 h-4 text-amber-600" />}
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-snug">
+                      Field volunteer with service hour logging and event participation rights.
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAppointRole('coordinator')}
+                    className={`p-3 rounded-xl border text-left transition-all ${
+                      appointRole === 'coordinator'
+                        ? 'border-purple-500 bg-purple-50/60 ring-2 ring-purple-500/20'
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-black text-xs text-slate-900">Wing Coordinator</span>
+                      {appointRole === 'coordinator' && <CheckCircle className="w-4 h-4 text-purple-600" />}
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-snug">
+                      Organizational lead authorized to create events and coordinate volunteers for a wing.
+                    </p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Target Wing */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Target Wing
+                </label>
+                <select
+                  value={appointWing}
+                  onChange={(e) => setAppointWing(e.target.value)}
+                  className="w-full text-xs font-semibold px-3 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B62A35] bg-white text-slate-800"
+                  required
+                >
+                  {fullWings.map((w) => (
+                    <option key={w._id || w.slug} value={w.nameBn}>
+                      {w.nameBn} ({w.nameEn})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Personal Note */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Personal Invitation Message (Optional)
+                </label>
+                <textarea
+                  value={appointNote}
+                  onChange={(e) => setAppointNote(e.target.value)}
+                  placeholder="e.g. We would love to have you lead our health initiatives given your expertise..."
+                  rows={3}
+                  className="w-full text-xs p-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#B62A35]"
+                />
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setAppointModalOpen(false)}
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={appointing}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-lg text-xs font-bold shadow-sm transition-all disabled:opacity-50"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>{appointing ? 'Sending Invitation...' : 'Send Role Invitation'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

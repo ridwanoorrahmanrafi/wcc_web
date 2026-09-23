@@ -144,7 +144,20 @@ export const api = {
   assignIssue: (id, data) => request(`/issues/${id}/assign`, { method: 'PATCH', body: JSON.stringify(data) }),
 
   // Impact Statistics
-  getImpactStats: () => request('/stats/impact')
+  getImpactStats: () => request('/stats/impact'),
+
+  // Notifications & Role Invitations
+  sendRoleInvitation: (data) => request('/notifications/invite', { method: 'POST', body: JSON.stringify(data) }),
+  getMyNotifications: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/notifications/my${query ? `?${query}` : ''}`);
+  },
+  respondToRoleInvitation: (id, action) => request(`/notifications/${id}/respond`, { method: 'POST', body: JSON.stringify({ action }) }),
+  getRoleInvitations: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/notifications/invitations${query ? `?${query}` : ''}`);
+  },
+  markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: 'PATCH' })
 };
 
 
