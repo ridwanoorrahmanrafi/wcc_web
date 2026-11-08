@@ -1,7 +1,10 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const rawApiBase = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api').trim();
+// Automatically sanitize and strip any trailing slash to avoid Vercel 308 double-slash redirects
+const API_BASE = rawApiBase.replace(/\/+$/, '');
 
 async function request(endpoint, options = {}) {
-  const url = `${API_BASE}${endpoint}`;
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${API_BASE}${cleanEndpoint}`;
   const headers = {
     'Content-Type': 'application/json',
     ...(options.headers || {})
@@ -23,12 +26,15 @@ async function request(endpoint, options = {}) {
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
+      throw new Error(errorData.error || errorData.message || `HTTP error! status: ${res.status}`);
     }
 
     return await res.json();
   } catch (err) {
     console.error(`API Error on [${options.method || 'GET'} ${endpoint}]:`, err.message);
+    if (err.message === 'Failed to fetch') {
+      throw new Error('Unable to connect to backend API service. Please verify your backend deployment.');
+    }
     throw err;
   }
 }

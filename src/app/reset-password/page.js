@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { useLanguage } from '@/context/LanguageContext';
 import LanguageToggle from '@/Components/LanguageToggle';
+import { checkPasswordRequirements, PasswordRequirementsList } from '@/lib/passwordValidation';
 import {
   Lock,
   Eye,
@@ -87,11 +88,12 @@ function ResetPasswordForm() {
     e.preventDefault();
     setSubmitError('');
 
-    if (newPassword.length < 6) {
+    const reqs = checkPasswordRequirements(newPassword);
+    if (!reqs.isValid) {
       setSubmitError(
         isBn
-          ? 'নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।'
-          : 'New password must be at least 6 characters long.'
+          ? 'নতুন পাসওয়ার্ড অবশ্যই কমপক্ষে ৮ অক্ষরের হতে হবে এবং অন্তত একটি বড় হাতের অক্ষর (A-Z), একটি ছোট হাতের অক্ষর (a-z), একটি সংখ্যা (0-9) এবং একটি বিশেষ চিহ্ন (!@#$...) থাকতে হবে।'
+          : 'New password must be at least 8 characters long and contain at least one uppercase letter (A-Z), one lowercase letter (a-z), one numeric digit (0-9), and one special character.'
       );
       return;
     }
@@ -225,10 +227,10 @@ function ResetPasswordForm() {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
-                    minLength={6}
+                    minLength={8}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder={isBn ? 'কমপক্ষে ৬ অক্ষর' : 'At least 6 characters'}
+                    placeholder={isBn ? 'কমপক্ষে ৮ অক্ষরের (Aa1@)' : 'Min 8 characters (Aa1@)'}
                     className="w-full pl-9 pr-10 py-2.5 border border-slate-200 rounded-xl focus:border-[#B62A35] focus:outline-hidden text-slate-900"
                   />
                   <button
@@ -239,6 +241,7 @@ function ResetPasswordForm() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+                <PasswordRequirementsList password={newPassword} isBn={isBn} />
               </div>
 
               <div>

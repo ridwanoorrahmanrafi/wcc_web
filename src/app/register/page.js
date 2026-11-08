@@ -20,6 +20,7 @@ import { auth, googleProvider, getFirebaseAuth } from '@/lib/firebase';
 import { signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { useLanguage } from '@/context/LanguageContext';
 import LanguageToggle from '@/Components/LanguageToggle';
+import { checkPasswordRequirements, PasswordRequirementsList } from '@/lib/passwordValidation';
 
 function RegisterForm() {
   const router = useRouter();
@@ -69,6 +70,16 @@ function RegisterForm() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
+
+    const reqs = checkPasswordRequirements(password);
+    if (!reqs.isValid) {
+      setError(tx(
+        'পাসওয়ার্ড অবশ্যই কমপক্ষে ৮ অক্ষরের হতে হবে এবং অন্তত একটি বড় হাতের অক্ষর (A-Z), একটি ছোট হাতের অক্ষর (a-z), একটি সংখ্যা (0-9) এবং একটি বিশেষ চিহ্ন (!@#$...) থাকতে হবে।',
+        'Password must be at least 8 characters long and contain at least one uppercase letter (A-Z), one lowercase letter (a-z), one numeric digit (0-9), and one special character.'
+      ));
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -248,13 +259,14 @@ function RegisterForm() {
                     type="password"
                     required
                     autoComplete="new-password"
-                    minLength={6}
+                    minLength={8}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder={tx('কমপক্ষে ৬ অক্ষরের', 'At least 6 characters')}
+                    placeholder={tx('কমপক্ষে ৮ অক্ষরের (Aa1@)', 'Min 8 chars (Aa1@)')}
                     className="w-full pl-8 pr-3 py-2.5 border border-slate-200 rounded-xl focus:border-[#B62A35] focus:outline-hidden"
                   />
                 </div>
+                <PasswordRequirementsList password={password} isBn={lang === 'bn'} />
               </div>
             </div>
 

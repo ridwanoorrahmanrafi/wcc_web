@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { checkPasswordRequirements, PasswordRequirementsList } from '@/lib/passwordValidation';
 import {
   User,
   Mail,
@@ -369,8 +370,9 @@ export default function ProfilePage() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      flashError('New password must be at least 6 characters long.');
+    const reqs = checkPasswordRequirements(newPassword);
+    if (!reqs.isValid) {
+      flashError('New password must be at least 8 characters long and contain at least one uppercase letter (A-Z), one lowercase letter (a-z), one numeric digit (0-9), and one special character (!@#$).');
       return;
     }
 
@@ -1066,13 +1068,14 @@ export default function ProfilePage() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
-                  minLength={6}
+                  minLength={8}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="At least 6 characters"
+                  placeholder="Min 8 characters (Aa1@)"
                   className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl focus:border-[#B62A35] focus:outline-hidden text-slate-900"
                 />
               </div>
+              <PasswordRequirementsList password={newPassword} isBn={false} />
             </div>
 
             <div>
